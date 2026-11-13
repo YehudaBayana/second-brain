@@ -5,43 +5,54 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
-type JobResponse struct {
-	Message string `json:"message"`
-}
+const queueName = "job-queue"
 
 type JobRequestBody struct {
 	JobString string `json:"job_string"`
 }
 
-func healthCheck(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("OK"))
+type Job struct {
+	ID       string `json:"id"`
+	Payload  string `json:"payload"`
+	Attempts int    `json:"attempts"`
 }
 
 func handlePostJob(redisClient *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		defer req.Body.Close()
 
-		var userRequest JobRequestBody
-		if err := json.NewDecoder(req.Body).Decode(&userRequest); err != nil {
+		var body JobRequestBody
+		if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
 			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
 
-		// Push to Redis
-		if err := redisClient.LPush(req.Context(), "job-queue", userRequest.JobString).Err(); err != nil {
-			log.Printf("Failed to push job to Redis: %v", err)
+		// Wrap the string in a Job struct so each job tracks its own attempts
+		job := Job{
+			ID:       fmt.Sprintf("%d", time.Now().UnixNano()),
+			Payload:  body.JobString,
+			Attempts: 0,
+		}
+
+		jobBytes, err := json.Marshal(job)
+		if err != nil {
+			http.Error(w, "Failed to encode job", http.StatusInternalServerError)
+			return
+		}
+
+		if err := redisClient.LPush(req.Context(), queueName, jobBytes).Err(); err != nil {
 			http.Error(w, "Could not push job to Redis", http.StatusInternalServerError)
 			return
 		}
 
-		// Set headers and status BEFORE encoding the response body
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusAccepted)
-		json.NewEncoder(w).Encode(JobResponse{Message: "accepted"})
+		w.Write([]byte(`{"message":"accepted"}`))
 	}
 }
 
@@ -51,7 +62,6 @@ func main() {
 	})
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/health", healthCheck)
 	mux.HandleFunc("POST /job", handlePostJob(redisClient))
 
 	fmt.Println("Server listening on :8080")
