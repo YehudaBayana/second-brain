@@ -21,7 +21,7 @@ type Job struct {
 	Attempts int    `json:"attempts"`
 }
 
-func handlePostJob(redisClient *redis.Client) http.HandlerFunc {
+func HandlePostJob(redisClient *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		defer req.Body.Close()
 
