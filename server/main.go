@@ -12,6 +12,7 @@ import (
 
 	"github.com/YehudaBayana/second-brain/server/auth"
 	"github.com/YehudaBayana/second-brain/server/job"
+	"github.com/YehudaBayana/second-brain/server/learning"
 	"github.com/YehudaBayana/second-brain/server/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -63,7 +64,7 @@ func main() {
 	sessionStore := auth.NewSessionStore(db)
 	authRepository := auth.NewRepository(sessionStore, db, strings.EqualFold(os.Getenv("COOKIE_SECURE"), "true"))
 	authHandler := auth.NewHandler(authRepository)
-	learningAPI := NewLearningAPI(db, aiClient)
+	learningAPI := learning.NewAPI(db, aiClient)
 	redisAddress := strings.TrimSpace(os.Getenv("REDIS_ADDR"))
 	if redisAddress == "" {
 		redisAddress = "localhost:6379"
@@ -78,22 +79,9 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("POST /job", job.HandlePostJob(redisClient))
-	mux.HandleFunc("POST /api/auth/register", authHandler.HandleRegister)
-	mux.HandleFunc("POST /api/auth/login", authHandler.HandleLogin)
-	mux.Handle("POST /api/auth/logout", protectedWrite(http.HandlerFunc(authHandler.HandleLogout)))
-	mux.Handle("GET /api/auth/me", protected(http.HandlerFunc(authHandler.HandleMe)))
-
-	mux.Handle("GET /api/topics", protected(http.HandlerFunc(learningAPI.HandleTopics)))
-	mux.Handle("POST /api/topics", protectedWrite(http.HandlerFunc(learningAPI.HandleTopics)))
-	mux.Handle("GET /api/notes", protected(http.HandlerFunc(learningAPI.HandleNotes)))
-	mux.Handle("POST /api/notes", protectedWrite(http.HandlerFunc(learningAPI.HandleNotes)))
-	mux.Handle("GET /api/notes/{noteID}", protected(http.HandlerFunc(learningAPI.HandleNote)))
-	mux.Handle("POST /api/notes/{noteID}/chat", protectedWrite(http.HandlerFunc(learningAPI.HandleNoteChat)))
-	mux.Handle("GET /api/search", protected(http.HandlerFunc(learningAPI.HandleSearch)))
-	mux.Handle("GET /api/review/due", protected(http.HandlerFunc(learningAPI.HandleDueReviews)))
-	mux.Handle("POST /api/review/{cardID}", protectedWrite(http.HandlerFunc(learningAPI.HandleGradeReview)))
-	mux.Handle("GET /api/stats", protected(http.HandlerFunc(learningAPI.HandleStats)))
+	job.RegisterRoutes(mux, redisClient)
+	authHandler.RegisterRoutes(mux, protected, protectedWrite)
+	learningAPI.RegisterRoutes(mux, protected, protectedWrite)
 
 	server := &http.Server{
 		Addr:              ":8080",

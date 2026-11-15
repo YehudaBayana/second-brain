@@ -1,4 +1,4 @@
-package main
+package learning
 
 import (
 	"context"
@@ -29,13 +29,13 @@ const (
 
 var reviewIntervals = [...]int{1, 3, 7, 14, 30}
 
-type LearningAPI struct {
+type API struct {
 	db *pgxpool.Pool
 	ai *genai.Client
 }
 
-func NewLearningAPI(db *pgxpool.Pool, ai *genai.Client) *LearningAPI {
-	return &LearningAPI{db: db, ai: ai}
+func NewAPI(db *pgxpool.Pool, ai *genai.Client) *API {
+	return &API{db: db, ai: ai}
 }
 
 type topic struct {
@@ -110,7 +110,7 @@ type noteChatResponse struct {
 	Updated bool   `json:"updated"`
 }
 
-func (api *LearningAPI) HandleTopics(w http.ResponseWriter, r *http.Request) {
+func (api *API) HandleTopics(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.UserIDFrom(r.Context())
 	if !ok {
 		writeLearningError(w, http.StatusUnauthorized, "authentication required")
@@ -180,7 +180,7 @@ func (api *LearningAPI) HandleTopics(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (api *LearningAPI) HandleNotes(w http.ResponseWriter, r *http.Request) {
+func (api *API) HandleNotes(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.UserIDFrom(r.Context())
 	if !ok {
 		writeLearningError(w, http.StatusUnauthorized, "authentication required")
@@ -238,7 +238,7 @@ func (api *LearningAPI) HandleNotes(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (api *LearningAPI) HandleNote(w http.ResponseWriter, r *http.Request) {
+func (api *API) HandleNote(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.UserIDFrom(r.Context())
 	if !ok {
 		writeLearningError(w, http.StatusUnauthorized, "authentication required")
@@ -292,7 +292,7 @@ func (api *LearningAPI) HandleNote(w http.ResponseWriter, r *http.Request) {
 	writeLearningJSON(w, http.StatusOK, noteDetail{Note: item, Cards: cards})
 }
 
-func (api *LearningAPI) HandleNoteChat(w http.ResponseWriter, r *http.Request) {
+func (api *API) HandleNoteChat(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.UserIDFrom(r.Context())
 	if !ok {
 		writeLearningError(w, http.StatusUnauthorized, "authentication required")
@@ -405,7 +405,7 @@ func (api *LearningAPI) HandleNoteChat(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (api *LearningAPI) loadNote(ctx context.Context, userID, noteID uuid.UUID) (note, error) {
+func (api *API) loadNote(ctx context.Context, userID, noteID uuid.UUID) (note, error) {
 	var item note
 	var takeaways, examples []byte
 	err := api.db.QueryRow(ctx, `
@@ -428,7 +428,7 @@ func (api *LearningAPI) loadNote(ctx context.Context, userID, noteID uuid.UUID) 
 	return item, nil
 }
 
-func (api *LearningAPI) handleCreateNote(w http.ResponseWriter, r *http.Request, userID uuid.UUID) {
+func (api *API) handleCreateNote(w http.ResponseWriter, r *http.Request, userID uuid.UUID) {
 	var input createNoteRequest
 	if !decodeLearningJSON(w, r, &input) {
 		return
@@ -593,7 +593,7 @@ func (api *LearningAPI) handleCreateNote(w http.ResponseWriter, r *http.Request,
 	})
 }
 
-func (api *LearningAPI) HandleSearch(w http.ResponseWriter, r *http.Request) {
+func (api *API) HandleSearch(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.UserIDFrom(r.Context())
 	if !ok {
 		writeLearningError(w, http.StatusUnauthorized, "authentication required")
@@ -625,7 +625,7 @@ func (api *LearningAPI) HandleSearch(w http.ResponseWriter, r *http.Request) {
 	writeLearningJSON(w, http.StatusOK, results)
 }
 
-func (api *LearningAPI) HandleDueReviews(w http.ResponseWriter, r *http.Request) {
+func (api *API) HandleDueReviews(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.UserIDFrom(r.Context())
 	if !ok {
 		writeLearningError(w, http.StatusUnauthorized, "authentication required")
@@ -664,7 +664,7 @@ func (api *LearningAPI) HandleDueReviews(w http.ResponseWriter, r *http.Request)
 	writeLearningJSON(w, http.StatusOK, cards)
 }
 
-func (api *LearningAPI) HandleGradeReview(w http.ResponseWriter, r *http.Request) {
+func (api *API) HandleGradeReview(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.UserIDFrom(r.Context())
 	if !ok {
 		writeLearningError(w, http.StatusUnauthorized, "authentication required")
@@ -738,7 +738,7 @@ func (api *LearningAPI) HandleGradeReview(w http.ResponseWriter, r *http.Request
 	})
 }
 
-func (api *LearningAPI) HandleStats(w http.ResponseWriter, r *http.Request) {
+func (api *API) HandleStats(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.UserIDFrom(r.Context())
 	if !ok {
 		writeLearningError(w, http.StatusUnauthorized, "authentication required")
@@ -765,7 +765,7 @@ func (api *LearningAPI) HandleStats(w http.ResponseWriter, r *http.Request) {
 	writeLearningJSON(w, http.StatusOK, stats)
 }
 
-func (api *LearningAPI) ensureDefaultTopics(ctx context.Context, userID uuid.UUID) error {
+func (api *API) ensureDefaultTopics(ctx context.Context, userID uuid.UUID) error {
 	for _, name := range []string{"Software", "Systems Design", "Web Development", "Other"} {
 		if _, err := api.db.Exec(ctx, `
 			INSERT INTO topics (user_id, name) VALUES ($1, $2)
@@ -776,7 +776,7 @@ func (api *LearningAPI) ensureDefaultTopics(ctx context.Context, userID uuid.UUI
 	return nil
 }
 
-func (api *LearningAPI) searchNotes(ctx context.Context, userID uuid.UUID, query, embedding string) ([]note, error) {
+func (api *API) searchNotes(ctx context.Context, userID uuid.UUID, query, embedding string) ([]note, error) {
 	rows, err := api.db.Query(ctx, `
 		WITH vector_hits AS (
 			SELECT id, row_number() OVER (ORDER BY embedding <=> $1::vector) AS rank
@@ -828,7 +828,7 @@ func (api *LearningAPI) searchNotes(ctx context.Context, userID uuid.UUID, query
 	return results, rows.Err()
 }
 
-func (api *LearningAPI) findRelatedNotes(ctx context.Context, userID, excludeID uuid.UUID, embedding string) ([]map[string]any, error) {
+func (api *API) findRelatedNotes(ctx context.Context, userID, excludeID uuid.UUID, embedding string) ([]map[string]any, error) {
 	rows, err := api.db.Query(ctx, `
 		SELECT n.id, n.title, t.name, 1 - (n.embedding <=> $1::vector) AS similarity
 		FROM notes n JOIN topics t ON t.id = n.topic_id
