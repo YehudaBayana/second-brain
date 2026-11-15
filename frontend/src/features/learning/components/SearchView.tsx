@@ -1,6 +1,16 @@
 "use client";
 
-import { Box, Button, Text, TextInput, Title } from "@mantine/core";
+import {
+  Alert,
+  Button,
+  Group,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+} from "@mantine/core";
 import { Icon } from "./Icon";
 import { NoteCard } from "./NoteCard";
 import { useNoteSearch } from "../hooks/useNoteSearch";
@@ -22,71 +32,74 @@ export function SearchView() {
   } = useNoteSearch();
 
   return (
-    <Box >
-      <Box >
-        <Box>
-          <Text >MEANING, NOT JUST KEYWORDS</Text>
-          <Title>Find that idea again</Title>
-          <Text>
+    <Stack gap="xl">
+      <Stack gap="xs">
+        <Text size="xs" fw={700} tt="uppercase" c="indigo.7">
+          Meaning, not just keywords
+        </Text>
+        <Title order={1}>Find that idea again</Title>
+        <Text c="dimmed" maw={640}>
             Search your saved notes with a phrase or a question. Similar
             concepts can surface too.
-          </Text>
-        </Box>
-      </Box>
+        </Text>
+      </Stack>
 
       {searchError ? (
-        <Box  role="alert" mb="md">
-          <Text>{searchError}</Text>
-        </Box>
+        <Alert color="red" variant="light" role="alert">
+          {searchError}
+        </Alert>
       ) : null}
 
-      <Box component="form"  onSubmit={handleSearch}>
-        <Icon name="search" size={20} />
-        <TextInput
-          aria-label="Search your notes"
-          
-          value={searchTerm}
-          onChange={(event) => setSearchTerm(event.currentTarget.value)}
-          placeholder="e.g. How do queues make slow work reliable?"
-        />
-        <Button
-          
-          type="submit"
-          disabled={isSearching || !searchTerm.trim()}
-          loading={isSearching}
-        >
-          {isSearching ? "Searching…" : "Search"}
-        </Button>
-      </Box>
+      <Paper component="form" onSubmit={handleSearch}>
+        <Group align="flex-end">
+          <TextInput
+            flex={1}
+            leftSection={<Icon name="search" size={18} />}
+            aria-label="Search your notes"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.currentTarget.value)}
+            placeholder="e.g. How do queues make slow work reliable?"
+          />
+          <Button
+            type="submit"
+            disabled={isSearching || !searchTerm.trim()}
+            loading={isSearching}
+          >
+            {isSearching ? "Searching…" : "Search"}
+          </Button>
+        </Group>
+      </Paper>
 
       {hasSearched ? (
-        <Box >
-          <Box >
-            <Box>
-              <Text >YOUR RESULTS</Text>
-              <Title order={2}>
+        <Stack gap="md">
+          <Stack gap={4}>
+            <Text size="xs" fw={700} tt="uppercase" c="indigo.7">
+              Your results
+            </Text>
+            <Title order={2}>
                 {searchResults.length
                   ? `${searchResults.length} related note${
                       searchResults.length === 1 ? "" : "s"
                     }`
                   : "No notes found yet"}
-              </Title>
-            </Box>
-          </Box>
+            </Title>
+          </Stack>
           {searchResults.length > 0 ? (
-            <Box >
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
               {searchResults.map((note) => (
                 <NoteCard key={note.id} note={note} />
               ))}
-            </Box>
+            </SimpleGrid>
           ) : (
-            <Text >
-              Try another phrase, or save a note about this topic first.
-            </Text>
+            <Paper>
+              <Text c="dimmed">
+                Try another phrase, or save a note about this topic first.
+              </Text>
+            </Paper>
           )}
-        </Box>
+        </Stack>
       ) : null}
-    </Box>
+    </Stack>
   );
 }
 

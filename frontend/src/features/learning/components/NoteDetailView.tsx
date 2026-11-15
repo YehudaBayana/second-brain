@@ -1,6 +1,18 @@
 "use client";
 
-import { Box, Button, Code, List, Paper, Text, Title } from "@mantine/core";
+import {
+  Alert,
+  Badge,
+  Button,
+  Code,
+  Group,
+  List,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import Link from "next/link";
 import { LearningViewSkeleton } from "@/src/components/feedback/LearningViewSkeleton";
 import { NoteEntity } from "@/src/domain/entities/NoteEntity";
@@ -16,13 +28,19 @@ export function NoteDetailView({ noteId }: { noteId: string }) {
   }
   if (query.isError) {
     return (
-      <Paper  role="alert">
-        <Title order={3}>Could not open this note</Title>
-        <Text>{query.error.message}</Text>
-        <Button component={Link} href="/library" variant="default">
-          Back to library
-        </Button>
-      </Paper>
+      <Alert color="red" variant="light" title="Could not open this note" role="alert">
+        <Stack gap="sm">
+          <Text>{query.error.message}</Text>
+          <Button
+            component={Link}
+            href="/library"
+            variant="default"
+            w="fit-content"
+          >
+            Back to library
+          </Button>
+        </Stack>
+      </Alert>
     );
   }
 
@@ -31,13 +49,13 @@ export function NoteDetailView({ noteId }: { noteId: string }) {
   const entity = NoteEntity.fromRaw(note);
 
   return (
-    <Box >
-      <Box >
-        <Box>
-          <Text >{entity.topicName}</Text>
-          <Title>{entity.displayTitle}</Title>
-          <Text>{entity.formattedDate}</Text>
-        </Box>
+    <Stack gap="xl">
+      <Group justify="space-between" align="flex-start">
+        <Stack gap="xs">
+          <Badge variant="light" color="indigo">{entity.topicName}</Badge>
+          <Title order={1}>{entity.displayTitle}</Title>
+          <Text size="sm" c="dimmed">{entity.formattedDate}</Text>
+        </Stack>
         <Button
           component={Link}
           href="/library"
@@ -46,46 +64,55 @@ export function NoteDetailView({ noteId }: { noteId: string }) {
         >
           Back to library
         </Button>
-      </Box>
+      </Group>
 
-      <Paper >
-        <Text >YOUR QUESTION</Text>
-        <Title order={2}>{note.question}</Title>
-        <Text >STUDY NOTE</Text>
-        <Text >{note.explanation}</Text>
+      <Paper>
+        <Stack gap="xl">
+          <Stack gap="sm">
+            <Text size="xs" fw={700} tt="uppercase" c="indigo.7">
+              Your question
+            </Text>
+            <Title order={2}>{note.question}</Title>
+          </Stack>
+          <Stack gap="sm">
+            <Text size="xs" fw={700} tt="uppercase" c="indigo.7">
+              Study note
+            </Text>
+            <Text>{note.explanation}</Text>
+          </Stack>
 
         {note.keyTakeaways.length > 0 ? (
-          <Box >
+          <Stack gap="sm">
             <Title order={3}>Key takeaways</Title>
-            <List >
+            <List withPadding spacing="xs">
               {note.keyTakeaways.map((item, index) => (
                 <List.Item key={`${index}-${item}`}>{item}</List.Item>
               ))}
             </List>
-          </Box>
+          </Stack>
         ) : null}
 
         {note.codeExamples.length > 0 ? (
-          <Box >
+          <Stack gap="sm">
             <Title order={3}>Examples</Title>
             {note.codeExamples.map((example, index) => (
               <Code
                 block
-                
+                p="md"
                 key={`${index}-${example.slice(0, 24)}`}
               >
                 {example}
               </Code>
             ))}
-          </Box>
+          </Stack>
         ) : null}
 
-        <Box >
+        <Stack gap="sm">
           <Title order={3}>Source material</Title>
           {note.sourceText ? (
-            <Text >{note.sourceText}</Text>
+            <Text c="dimmed">{note.sourceText}</Text>
           ) : (
-            <Text >No source text was added.</Text>
+            <Text c="dimmed">No source text was added.</Text>
           )}
           {note.sourceUrl ? (
             <Button
@@ -99,40 +126,54 @@ export function NoteDetailView({ noteId }: { noteId: string }) {
               Open source
             </Button>
           ) : null}
-        </Box>
+        </Stack>
 
         {cards.length > 0 ? (
-          <Box >
+          <Stack gap="sm">
             <Title order={3}>Review cards</Title>
-            <Box >
+            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
               {cards.map((card) => (
-                <Paper  key={card.id}>
-                  <Text >QUESTION</Text>
-                  <Text>{card.frontQuestion}</Text>
-                  <Text >ANSWER</Text>
-                  <Text>{card.backAnswer}</Text>
-                  <Text >
-                    Next review: {card.nextReviewDate}
-                  </Text>
+                <Paper key={card.id} p="md" bg="gray.0">
+                  <Stack gap="sm">
+                    <Stack gap={4}>
+                      <Text size="xs" fw={700} tt="uppercase" c="dimmed">
+                        Question
+                      </Text>
+                      <Text>{card.frontQuestion}</Text>
+                    </Stack>
+                    <Stack gap={4}>
+                      <Text size="xs" fw={700} tt="uppercase" c="dimmed">
+                        Answer
+                      </Text>
+                      <Text>{card.backAnswer}</Text>
+                    </Stack>
+                    <Text size="xs" c="dimmed">
+                      Next review: {card.nextReviewDate}
+                    </Text>
+                  </Stack>
                 </Paper>
               ))}
-            </Box>
-          </Box>
+            </SimpleGrid>
+          </Stack>
         ) : null}
+        </Stack>
       </Paper>
 
-      <Paper >
-        <Text >KEEP EXPLORING</Text>
-        <Title order={2}>Ask about this note</Title>
-        <Text >
-          Follow-up answers use this note and your conversation as context.
-          Useful changes can be added to the saved note automatically.
-        </Text>
-        <NoteChat
-          key={note.id}
-          note={note}
-        />
+      <Paper>
+        <Stack gap="md">
+          <Stack gap="xs">
+            <Text size="xs" fw={700} tt="uppercase" c="indigo.7">
+              Keep exploring
+            </Text>
+            <Title order={2}>Ask about this note</Title>
+            <Text c="dimmed">
+              Follow-up answers use this note and your conversation as context.
+              Useful changes can be added to the saved note automatically.
+            </Text>
+          </Stack>
+          <NoteChat key={note.id} note={note} />
+        </Stack>
       </Paper>
-    </Box>
+    </Stack>
   );
 }

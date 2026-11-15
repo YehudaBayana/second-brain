@@ -1,107 +1,110 @@
-import { Box, Paper, Skeleton } from "@mantine/core";
-import { Icon } from "@/src/features/learning/components/Icon";
+"use client";
 
-/**
- * AppShellSkeleton
- * High-fidelity layout skeleton that exactly mirrors the real Second Brain application shell.
- * Prevents layout shift and eliminates "Loading..." text flash during server rendering and route transitions.
- */
+import {
+  AppShell,
+  Group,
+  Paper,
+  SimpleGrid,
+  Skeleton,
+  Stack,
+} from "@mantine/core";
+
 export function AppShellSkeleton() {
   return (
-    <Box  aria-busy="true" aria-label="Loading workspace">
-      {/* Sidebar Skeleton */}
-      <Box component="aside" >
-        <Box >
-          <Box >
-            <Icon name="book" size={21} />
-          </Box>
-          <Box w={90} h={18}>
-            <Skeleton height={18} width="100%" radius="sm" />
-          </Box>
-        </Box>
-
-        <Skeleton height={10} width={90} radius="xs" mb="sm" />
-
-        <Box component="nav" >
-          {[1, 2, 3, 4].map((item) => (
-            <Box
-              key={item}
-              
-              aria-hidden="true"
-            >
-              <Skeleton height={18} width={18} circle />
-              <Skeleton height={14} width="60%" radius="sm" />
-            </Box>
-          ))}
-        </Box>
-
-        <Box >
-          <Box >
-            <Skeleton height={12} width="50%" radius="sm" mb="xs" />
-            <Skeleton height={10} width="90%" radius="xs" mb={4} />
-            <Skeleton height={10} width="75%" radius="xs" />
-          </Box>
-
-          <Box >
-            <Skeleton height={28} width={28} circle />
+    <AppShell
+      header={{ height: 60 }}
+      navbar={{ width: 300, breakpoint: "sm" }}
+      padding="md"
+      bg="gray.0"
+      aria-busy="true"
+      aria-label="Loading workspace"
+    >
+      <AppShell.Header bg="white">
+        <Group h="100%" px="lg" justify="space-between">
+          <Skeleton height={14} width={180} radius="sm" />
+          <Group gap="sm">
             <Skeleton height={14} width={120} radius="sm" />
-          </Box>
-        </Box>
-      </Box>
+            <Skeleton height={32} width={120} radius="md" />
+          </Group>
+        </Group>
+      </AppShell.Header>
 
-      {/* Main Panel Skeleton */}
-      <Box component="main" >
-        <Box component="header" >
-          <Skeleton height={14} width={160} radius="sm" />
-          <Skeleton height={14} width={120} radius="sm" />
-        </Box>
+      <AppShell.Navbar bg="white" p="md">
+        <Stack h="100%" gap="md">
+          <Group gap="sm" mb="md">
+            <Skeleton height={36} width={36} radius="md" />
+            <Skeleton height={18} width={110} radius="sm" />
+          </Group>
+          <Skeleton height={10} width={100} radius="xs" />
+          <Stack component="nav" gap="sm" aria-label="Loading navigation">
+            {[1, 2, 3, 4].map((item) => (
+              <Group key={item} gap="sm" aria-hidden="true">
+                <Skeleton height={18} width={18} circle />
+                <Skeleton height={14} width="60%" radius="sm" />
+              </Group>
+            ))}
+          </Stack>
+          <Stack mt="auto" gap="md">
+            <Paper p="md" bg="indigo.0">
+              <Stack gap="sm">
+                <Skeleton height={12} width="50%" radius="sm" />
+                <Skeleton height={10} width="90%" radius="xs" />
+                <Skeleton height={10} width="75%" radius="xs" />
+              </Stack>
+            </Paper>
+            <Group gap="sm">
+              <Skeleton height={28} width={28} circle />
+              <Skeleton height={14} width={140} radius="sm" />
+            </Group>
+          </Stack>
+        </Stack>
+      </AppShell.Navbar>
 
-        <Box >
-          {/* Page Heading Skeleton */}
-          <Box >
-            <Box flex={1}>
-              <Skeleton height={10} width={140} radius="xs" mb="xs" />
-              <Skeleton height={28} width={280} radius="md" mb="xs" />
+      <AppShell.Main>
+        <Stack maw={1280} mx="auto" p="xl" gap="xl">
+          <Group justify="space-between" align="flex-end">
+            <Stack gap="sm" flex={1}>
+              <Skeleton height={10} width={140} radius="xs" />
+              <Skeleton height={28} width={280} radius="md" />
               <Skeleton height={14} width={340} radius="sm" />
-            </Box>
+            </Stack>
             <Skeleton height={36} width={130} radius="md" />
-          </Box>
+          </Group>
 
-          {/* Stats Grid Skeleton */}
-          <Box >
+          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
             {[1, 2, 3].map((card) => (
-              <Paper key={card} >
-                <Skeleton height={38} width={38} radius="md" mb="xs" />
-                <Skeleton height={12} width={80} radius="sm" mb="xs" />
-                <Skeleton height={26} width={40} radius="sm" mb="xs" />
-                <Skeleton height={10} width={110} radius="xs" />
+              <Paper key={card}>
+                <Group gap="md">
+                  <Skeleton height={44} width={44} radius="md" />
+                  <Stack gap="xs">
+                    <Skeleton height={12} width={80} radius="sm" />
+                    <Skeleton height={26} width={40} radius="sm" />
+                    <Skeleton height={10} width={110} radius="xs" />
+                  </Stack>
+                </Group>
               </Paper>
             ))}
-          </Box>
+          </SimpleGrid>
 
-          {/* Dashboard Columns Skeleton */}
-          <Box >
-            <Paper >
-              <Skeleton height={20} width={160} radius="sm" mb="md" />
-              <Skeleton height={42} width="100%" radius="md" mb="md" />
-              <Skeleton height={80} width="100%" radius="md" mb="md" />
-              <Skeleton height={38} width="100%" radius="md" />
-            </Paper>
+          <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
+            {[1, 2].map((card) => (
+              <Paper key={card}>
+                <Stack gap="md">
+                  <Skeleton height={20} width={160} radius="sm" />
+                  <Skeleton height={42} width="100%" radius="md" />
+                  <Skeleton height={80} width="100%" radius="md" />
+                  <Skeleton height={38} width="100%" radius="md" />
+                </Stack>
+              </Paper>
+            ))}
+          </SimpleGrid>
 
-            <Paper >
-              <Skeleton height={20} width={140} radius="sm" mb="md" />
-              <Skeleton height={24} width={180} radius="sm" mb="sm" />
-              <Skeleton height={14} width="80%" radius="sm" mb="lg" />
-              <Skeleton height={40} width="100%" radius="md" />
-            </Paper>
-          </Box>
-        </Box>
-
-        <Box component="footer" >
-          <Skeleton height={12} width={180} radius="xs" />
-          <Skeleton height={12} width={80} radius="xs" />
-        </Box>
-      </Box>
-    </Box>
+          <Group component="footer" justify="space-between">
+            <Skeleton height={12} width={180} radius="xs" />
+            <Skeleton height={12} width={80} radius="xs" />
+          </Group>
+        </Stack>
+      </AppShell.Main>
+    </AppShell>
   );
 }

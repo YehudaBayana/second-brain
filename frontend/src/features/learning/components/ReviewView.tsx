@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Box,
+  Alert,
   Button,
   Group,
   Paper,
@@ -31,11 +31,12 @@ function GradeButton({
     <Button
       variant="default"
       fullWidth
+      size="md"
       disabled={disabled}
       onClick={onClick}
       leftSection={<Icon name={icon} />}
     >
-      <Stack gap={0}>
+      <Stack gap={0} align="flex-start">
         <Text component="strong">{label}</Text>
         <Text size="xs" c="dimmed">
           {hint}
@@ -70,58 +71,66 @@ export function ReviewView() {
 
   return (
     <Stack gap="md" maw={760} mx="auto">
-      <Box >
-        <Box>
-          <Text >SPACED REPETITION</Text>
-          <Title>Time to remember</Title>
-          <Text>
+      <Group justify="space-between" align="flex-end">
+        <Stack gap="xs">
+          <Text size="xs" fw={700} tt="uppercase" c="indigo.7">
+            Spaced repetition
+          </Text>
+          <Title order={1}>Time to remember</Title>
+          <Text c="dimmed">
             Try to recall the answer before you reveal it. Every attempt is
             practice.
           </Text>
-        </Box>
-        <Group gap="xs">
+        </Stack>
+        <Text size="sm" c="dimmed">
           <Icon name="cards" /> {remainingCount} remaining
-        </Group>
-      </Box>
+        </Text>
+      </Group>
 
       {sessionError ? (
-        <Box  role="alert" mb="md">
-          <Text>{sessionError}</Text>
+        <Alert color="red" variant="light" role="alert">
+          {sessionError}
           <Button variant="subtle" size="xs" onClick={clearError}>
             Dismiss
           </Button>
-        </Box>
+        </Alert>
       ) : null}
 
       {currentCard ? (
-        <Paper component="article" >
-          <Box >
-            <Text component="span" >
+        <Paper component="article">
+          <Stack gap="xl">
+            <Group justify="space-between">
+              <Text size="sm" fw={600} c="indigo.7">
               {currentCard.topicName}
-            </Text>
-            <Text>
+              </Text>
+              <Text size="sm" c="dimmed">
               Card {stats.dueToday - remainingCount + 1} of {stats.dueToday}
-            </Text>
-          </Box>
+              </Text>
+            </Group>
 
-          <Box >
-            <Text >QUESTION</Text>
-            <Title order={2}>{currentCard.frontQuestion}</Title>
+            <Stack gap="md">
+              <Text size="xs" fw={700} tt="uppercase" c="dimmed">
+                Question
+              </Text>
+              <Title order={2}>{currentCard.frontQuestion}</Title>
             {isRevealed ? (
-              <Box >
-                <Text >ANSWER</Text>
-                <Text>{currentCard.backAnswer}</Text>
-              </Box>
+              <Paper p="md" bg="gray.0">
+                <Stack gap="xs">
+                  <Text size="xs" fw={700} tt="uppercase" c="indigo.7">
+                    Answer
+                  </Text>
+                  <Text>{currentCard.backAnswer}</Text>
+                </Stack>
+              </Paper>
             ) : (
-              <Text >
+              <Text c="dimmed" size="sm">
                 Take a breath and think it through before revealing.
               </Text>
             )}
-          </Box>
+            </Stack>
 
           {!isRevealed ? (
             <Button
-              
               onClick={reveal}
               rightSection={<Icon name="arrow" size={16} />}
             >
@@ -156,34 +165,38 @@ export function ReviewView() {
             </Group>
           )}
 
-          <Box >
-            <Text>
-              From note:{" "}
-              <Text component="strong">{currentCard.noteTitle}</Text>
-            </Text>
-            <Text>
-              Memory level:{" "}
-              <Text component="strong">{currentCard.memoryLevel} / 5</Text>
-            </Text>
-          </Box>
+            <Group justify="space-between" c="dimmed">
+              <Text size="xs">
+                From note:{" "}
+                <Text component="span" fw={600}>
+                  {currentCard.noteTitle}
+                </Text>
+              </Text>
+              <Text size="xs">
+                Memory level:{" "}
+                <Text component="span" fw={600}>
+                  {currentCard.memoryLevel} / 5
+                </Text>
+              </Text>
+            </Group>
+          </Stack>
         </Paper>
       ) : (
-        <Paper >
-          <Box >
+        <Paper>
+          <Stack align="center" ta="center" gap="sm" py="xl">
             <Icon name="check" size={28} />
-          </Box>
           <Title order={3}>All caught up for today.</Title>
-          <Text>
+          <Text c="dimmed">
             You finished every card scheduled for review. Taking a break gives
             memory time to consolidate.
           </Text>
           <Button
             component={Link}
             href="/"
-            
           >
             Back to overview
           </Button>
+          </Stack>
         </Paper>
       )}
     </Stack>

@@ -28,7 +28,7 @@ async function UnauthenticatedLayout({
   }
 
   return (
-    <Flex mih="100vh" align="center" justify="center" p="md">
+    <Flex mih="100vh" align="center" justify="center" p="md" bg="gray.0">
       {children}
     </Flex>
   );

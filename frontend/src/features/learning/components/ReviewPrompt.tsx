@@ -1,4 +1,13 @@
-import { Box, Button, Paper, Text, ThemeIcon, Title } from "@mantine/core";
+import {
+  Badge,
+  Button,
+  Group,
+  Paper,
+  Stack,
+  Text,
+  ThemeIcon,
+  Title,
+} from "@mantine/core";
 import Link from "next/link";
 import { Icon } from "./Icon";
 
@@ -15,64 +24,70 @@ export function ReviewPrompt({ dueToday, onSaveIdea }: ReviewPromptProps) {
   };
 
   return (
-    <Paper >
-      <Box >
-        <Box>
-          <Text >A LITTLE PRACTICE</Text>
-          <Title order={2}>Make it memorable</Title>
-        </Box>
-        <ThemeIcon  variant="light">
-          <Icon name="cards" />
-        </ThemeIcon>
-      </Box>
+    <Paper bg="indigo.0">
+      <Stack gap="lg">
+        <Group justify="space-between" align="flex-start">
+          <Stack gap={4}>
+            <Text size="xs" fw={700} tt="uppercase" c="indigo.7">
+              A little practice
+            </Text>
+            <Title order={2}>Make it memorable</Title>
+          </Stack>
+          <ThemeIcon size={48} variant="light" color="indigo">
+            <Icon name="cards" />
+          </ThemeIcon>
+        </Group>
 
-      <Box >
-        <Icon name="clock" size={26} />
-        <Box  />
-      </Box>
-
-      {dueToday > 0 ? (
-        <>
-          <Title order={3}>
-            {dueToday} card{dueToday === 1 ? "" : "s"} ready when you are
-          </Title>
-          <Text>
-            Take a moment to recall before revealing the answer. That effort
-            helps new ideas settle in.
+        <Group gap="sm">
+          <Badge leftSection={<Icon name="clock" size={13} />} color="indigo" variant="light">
+            {dueToday} due today
+          </Badge>
+          <Text size="sm" c="dimmed">
+            {dueToday > 0 ? "A quick review helps ideas stick." : "You’re all caught up."}
           </Text>
-          <Button
-            component={Link}
-            href="/review"
-            
-            rightSection={<Icon name="arrow" size={16} />}
-          >
-            Start a review
-          </Button>
-        </>
-      ) : (
-        <>
-          <Title order={3}>You’re all caught up</Title>
-          <Text>
-            When you save notes with quiz cards, they’ll show up here when it’s
-            time to revisit them.
-          </Text>
-          <Button
-            
-            variant="default"
-            onClick={handleSaveIdea}
-            rightSection={<Icon name="arrow" size={16} />}
-          >
-            Save a new idea
-          </Button>
-        </>
-      )}
+        </Group>
 
-      <Box >
-        <Icon name="sparkle" size={15} />
-        <Text component="span">
+        {dueToday > 0 ? (
+          <Stack gap="sm">
+            <Title order={3}>
+              {dueToday} card{dueToday === 1 ? "" : "s"} ready when you are
+            </Title>
+            <Text c="dimmed">
+              Take a moment to recall before revealing the answer. That effort
+              helps new ideas settle in.
+            </Text>
+            <Button
+              component={Link}
+              href="/review"
+              w="fit-content"
+              rightSection={<Icon name="arrow" size={16} />}
+            >
+              Start a review
+            </Button>
+          </Stack>
+        ) : (
+          <Stack gap="sm">
+            <Title order={3}>You’re all caught up</Title>
+            <Text c="dimmed">
+              When you save notes with quiz cards, they’ll show up here when it’s
+              time to revisit them.
+            </Text>
+            <Button
+              variant="default"
+              onClick={handleSaveIdea}
+              w="fit-content"
+              rightSection={<Icon name="arrow" size={16} />}
+            >
+              Save a new idea
+            </Button>
+          </Stack>
+        )}
+
+        <Text size="xs" c="dimmed">
+          <Icon name="sparkle" size={15} />{" "}
           Consistency matters more than long sessions.
         </Text>
-      </Box>
+      </Stack>
     </Paper>
   );
 }

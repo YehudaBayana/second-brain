@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Box,
+  Alert,
   Button,
   Card,
   Flex,
@@ -26,7 +26,7 @@ export function RegisterForm() {
   } = useCredentialsForm("register");
 
   return (
-    <Card w={420} maw="100%">
+    <Card w={420} maw="100%" padding="xl">
       <Stack gap="lg">
         <Stack gap="xs">
           <Title order={2}>Create Account</Title>
@@ -36,13 +36,13 @@ export function RegisterForm() {
         </Stack>
 
         {registerError ? (
-          <Box  role="alert" p="xs">
+          <Alert color="red" variant="light" role="alert">
             <Text size="sm">
               {registerError instanceof Error
                 ? registerError.message
                 : "Failed to create account. Please try again."}
             </Text>
-          </Box>
+          </Alert>
         ) : null}
 
         <form onSubmit={handleSubmit}>

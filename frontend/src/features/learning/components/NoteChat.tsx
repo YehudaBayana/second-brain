@@ -1,6 +1,14 @@
 "use client";
 
-import { Box, Button, Text, Textarea } from "@mantine/core";
+import {
+  Alert,
+  Button,
+  Group,
+  Paper,
+  Stack,
+  Text,
+  Textarea,
+} from "@mantine/core";
 import { useState, type FormEvent } from "react";
 import { useChatAboutNote } from "../query/useLearning";
 import type { Note, NoteChatMessage } from "../model/types";
@@ -47,56 +55,65 @@ export function NoteChat({
   };
 
   return (
-    <Box >
-      <Box  aria-live="polite">
+    <Stack gap="md">
+      <Stack gap="sm" aria-live="polite">
         {messages.map((item, index) => (
-          <Box
-            
+          <Group
             key={`${index}-${item.role}`}
+            justify={item.role === "user" ? "flex-end" : "flex-start"}
           >
-            <Text >
-              {item.role === "assistant" ? "Study assistant" : "You"}
-            </Text>
-            <Text>{item.content}</Text>
-            {item.role === "assistant" &&
-            index === messages.length - 1 &&
-            chatMutation.data?.updated ? (
-              <Text >Note updated</Text>
-            ) : null}
-          </Box>
+            <Paper
+              p="sm"
+              maw="85%"
+              bg={item.role === "user" ? "indigo.0" : "gray.0"}
+            >
+              <Stack gap={4}>
+                <Text size="xs" fw={600} c="dimmed">
+                  {item.role === "assistant" ? "Study assistant" : "You"}
+                </Text>
+                <Text size="sm">{item.content}</Text>
+                {item.role === "assistant" &&
+                index === messages.length - 1 &&
+                chatMutation.data?.updated ? (
+                  <Text size="xs" c="indigo.7">Note updated</Text>
+                ) : null}
+              </Stack>
+            </Paper>
+          </Group>
         ))}
         {chatMutation.isPending ? (
-          <Text  role="status">
+          <Text size="sm" c="dimmed" role="status">
             Thinking about this note…
           </Text>
         ) : null}
-      </Box>
+      </Stack>
       {error ? (
-        <Text  role="alert">
-          {error}
-        </Text>
+        <Alert color="red" variant="light" role="alert">{error}</Alert>
       ) : null}
-      <Box component="form"  onSubmit={handleSubmit}>
-        <Textarea
-          aria-label="Ask a follow-up question about this note"
-          value={message}
-          onChange={(event) => setMessage(event.currentTarget.value)}
-          placeholder="Ask a follow-up about this note…"
-          maxLength={2000}
-          minRows={2}
-          maxRows={5}
-          autosize
-        />
-        <Button
-          type="submit"
-          
-          aria-label="Send follow-up question"
-          disabled={!message.trim() || chatMutation.isPending}
-          loading={chatMutation.isPending}
-        >
-          <Icon name="arrow" size={16} />
-        </Button>
-      </Box>
-    </Box>
+      <form onSubmit={handleSubmit}>
+        <Group align="flex-end">
+          <Textarea
+            flex={1}
+            aria-label="Ask a follow-up question about this note"
+            value={message}
+            onChange={(event) => setMessage(event.currentTarget.value)}
+            placeholder="Ask a follow-up about this note…"
+            maxLength={2000}
+            minRows={2}
+            maxRows={5}
+            autosize
+          />
+          <Button
+            type="submit"
+            aria-label="Send follow-up question"
+            disabled={!message.trim() || chatMutation.isPending}
+            loading={chatMutation.isPending}
+            px="sm"
+          >
+            <Icon name="arrow" size={16} />
+          </Button>
+        </Group>
+      </form>
+    </Stack>
   );
 }

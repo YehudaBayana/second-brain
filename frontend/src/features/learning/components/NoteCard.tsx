@@ -1,7 +1,9 @@
 import {
   Anchor,
-  Box,
+  Badge,
+  Group,
   Paper,
+  Stack,
   Text,
   Title,
 } from "@mantine/core";
@@ -15,37 +17,41 @@ export function NoteCard({ note: rawNote }: { note: Note | NoteEntity }) {
     rawNote instanceof NoteEntity ? rawNote : NoteEntity.fromRaw(rawNote);
 
   return (
-    <Paper >
-      <Anchor
-        component={Link}
-        href={`/notes/${encodeURIComponent(note.id)}`}
-        
-        aria-label={`Open note: ${note.displayTitle}`}
-      />
-      <Box >
-        <Text component="span" >
-          {note.topicName}
-        </Text>
-        <Text >{note.formattedDate}</Text>
-      </Box>
+    <Paper component="article" h="100%">
+      <Stack h="100%" gap="sm">
+        <Group justify="space-between" align="center">
+          <Badge variant="light" color="indigo">{note.topicName}</Badge>
+          <Text size="xs" c="dimmed">{note.formattedDate}</Text>
+        </Group>
 
-      <Title order={3}>{note.displayTitle}</Title>
-      <Text >{note.question}</Text>
-      <Text >{note.explanation}</Text>
+        <Anchor
+          component={Link}
+          href={`/notes/${encodeURIComponent(note.id)}`}
+          underline="hover"
+          c="dark"
+          aria-label={`Open note: ${note.displayTitle}`}
+        >
+          <Title order={3} size="h4">{note.displayTitle}</Title>
+        </Anchor>
+        <Text size="sm" fw={600}>{note.question}</Text>
+        <Text size="sm" c="dimmed" lineClamp={3}>{note.explanation}</Text>
 
-      <Box >
-        <Text>{note.takeawaysCount} key ideas</Text>
-        {note.hasSourceUrl && note.sourceUrl ? (
-          <Anchor
-            href={note.sourceUrl}
-            target="_blank"
-            rel="noreferrer"
-            
-          >
-            Open source <Icon name="arrow" size={14} />
-          </Anchor>
-        ) : null}
-      </Box>
+        <Group justify="space-between" mt="auto" pt="sm">
+          <Text size="xs" c="dimmed">
+            {note.takeawaysCount} key ideas
+          </Text>
+          {note.hasSourceUrl && note.sourceUrl ? (
+            <Anchor
+              href={note.sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+              size="xs"
+            >
+              Open source <Icon name="arrow" size={14} />
+            </Anchor>
+          ) : null}
+        </Group>
+      </Stack>
     </Paper>
   );
 }

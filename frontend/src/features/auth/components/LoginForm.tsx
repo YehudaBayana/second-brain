@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Box,
+  Alert,
   Button,
   Card,
   Flex,
@@ -26,7 +26,7 @@ export function LoginForm() {
   } = useCredentialsForm("login");
 
   return (
-    <Card w={420} maw="100%">
+    <Card w={420} maw="100%" padding="xl">
       <Stack gap="lg">
         <Stack gap="xs">
           <Title order={2}>Welcome Back</Title>
@@ -36,13 +36,13 @@ export function LoginForm() {
         </Stack>
 
         {loginError ? (
-          <Box  role="alert" p="xs">
+          <Alert color="red" variant="light" role="alert">
             <Text size="sm">
               {loginError instanceof Error
                 ? loginError.message
                 : "Failed to sign in. Please check your credentials."}
             </Text>
-          </Box>
+          </Alert>
         ) : null}
 
         <form onSubmit={handleSubmit}>

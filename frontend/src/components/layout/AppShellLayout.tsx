@@ -3,10 +3,13 @@
 import {
   Anchor,
   AppShell,
-  Box,
+  Avatar,
+  Badge,
   Burger,
   Button,
   Group,
+  NavLink,
+  Paper,
   Stack,
   Text,
   useAppShellResize,
@@ -92,7 +95,7 @@ export function AppShellLayout({
 
   return (
     <AppShell
-      
+      bg="gray.0"
       header={{ height: 60 }}
       navbar={{
         width: 300,
@@ -102,8 +105,8 @@ export function AppShellLayout({
       padding="md"
       resize={resize}
     >
-      <AppShell.Header >
-        <Group h="100%" px="md" justify="space-between">
+      <AppShell.Header bg="white">
+        <Group h="100%" px={{ base: "sm", sm: "lg" }} justify="space-between">
           <Group h="100%" gap="md">
             <Burger
               opened={opened}
@@ -112,14 +115,16 @@ export function AppShellLayout({
               size="sm"
               aria-label={opened ? "Close navigation" : "Open navigation"}
             />
-            <Text >
+            <Text size="sm" c="dimmed">
               Your workspace <Text component="span">/</Text>{" "}
-              <Text component="strong">{currentLabel}</Text>
+              <Text component="span" fw={600} c="dark">
+                {currentLabel}
+              </Text>
             </Text>
           </Group>
-          <Group gap="md">
+          <Group gap="xs">
             {currentDate ? (
-              <Text >
+              <Text size="sm" c="dimmed" visibleFrom="sm">
                 {new Intl.DateTimeFormat("en", {
                   weekday: "long",
                   month: "long",
@@ -132,15 +137,13 @@ export function AppShellLayout({
               onClick={resize.resetAll}
               variant="default"
               size="xs"
-              
             >
               Reset layout
             </Button>
             <Button
               onClick={assistantDisclosure.toggle}
-              variant="default"
+              variant="filled"
               size="xs"
-              
               aria-expanded={assistantOpened}
               aria-controls="study-assistant-panel"
               leftSection={<Icon name="sparkle" size={14} />}
@@ -151,95 +154,100 @@ export function AppShellLayout({
         </Group>
       </AppShell.Header>
 
-      <AppShell.Navbar  p="md">
-        <Anchor
-          component={Link}
-          
-          href="/"
-          aria-label="Second Brain home"
-        >
-          <Box >
-            <Icon name="book" size={21} />
-          </Box>
-          <Text component="span">
-            second
-            <Text component="span" >
-              brain
-            </Text>
+      <AppShell.Navbar bg="white" p="md">
+        <Stack h="100%" gap="md">
+          <Anchor
+            component={Link}
+            href="/"
+            underline="never"
+            aria-label="Second Brain home"
+          >
+            <Group gap="sm" mb="md">
+              <Avatar color="indigo" radius="md" size="md">
+                <Icon name="book" size={20} />
+              </Avatar>
+              <Text fw={700} size="lg" c="dark">
+                second<Text component="span" c="indigo.7">brain</Text>
+              </Text>
+            </Group>
+          </Anchor>
+
+          <Text size="xs" fw={700} tt="uppercase" c="dimmed">
+            Your workspace
           </Text>
-        </Anchor>
 
-        <Text >YOUR WORKSPACE</Text>
-
-        <Stack component="nav" gap="xs" aria-label="Main navigation">
-          {navItems.map(({ href, label, icon, badgeKey }) => {
-            const active = isActive(href);
-            return (
-              <Anchor
+          <Stack component="nav" gap={4} aria-label="Main navigation">
+            {navItems.map(({ href, label, icon, badgeKey }) => (
+              <NavLink
                 component={Link}
                 key={href}
                 href={href}
-                
-                aria-current={active ? "page" : undefined}
-                aria-label={label}
-              >
-                <Icon name={icon} />
-                <Text component="span" c={active ? "blue" : undefined}>
-                  {label}
-                </Text>
-                {badgeKey === "dueToday" && dueToday > 0 ? (
-                  <Text component="span" >
-                    {dueToday}
+                label={label}
+                leftSection={<Icon name={icon} size={18} />}
+                rightSection={
+                  badgeKey === "dueToday" && dueToday > 0 ? (
+                    <Badge size="sm" variant="light" color="indigo">
+                      {dueToday}
+                    </Badge>
+                  ) : null
+                }
+                active={isActive(href)}
+                variant="light"
+                color="indigo"
+                aria-current={isActive(href) ? "page" : undefined}
+              />
+            ))}
+          </Stack>
+
+          <Stack mt="auto" gap="md">
+            <Paper p="md" bg="indigo.0" radius="md">
+              <Group gap="sm" align="flex-start">
+                <Avatar color="indigo" variant="light" radius="md" size="sm">
+                  <Icon name="sparkle" size={16} />
+                </Avatar>
+                <Stack gap={4} flex={1}>
+                  <Text size="sm" fw={600}>Little by little</Text>
+                  <Text size="xs" c="dimmed">
+                    Ten focused minutes today beats an hour of cramming later.
                   </Text>
-                ) : null}
-              </Anchor>
-            );
-          })}
+                </Stack>
+              </Group>
+            </Paper>
+
+            <Group gap="sm" wrap="nowrap">
+              <Avatar color="indigo" radius="xl" size="sm">
+                {email.slice(0, 1).toUpperCase()}
+              </Avatar>
+              <Text size="sm" truncate="end" title={email} flex={1}>
+                {email}
+              </Text>
+              <Button
+                onClick={() => logout()}
+                aria-label="Sign out"
+                title="Sign out"
+                disabled={isLoggingOut}
+                variant="subtle"
+                color="gray"
+                size="xs"
+              >
+                <Icon name="logout" />
+              </Button>
+            </Group>
+          </Stack>
         </Stack>
-
-        <Box >
-          <Box >
-            <Box >
-              <Icon name="sparkle" size={17} />
-            </Box>
-            <Text component="strong">Little by little</Text>
-            <Text>
-              Ten focused minutes today beats an hour of cramming later.
-            </Text>
-          </Box>
-
-          <Box >
-            <Text component="span" >
-              {email.slice(0, 1).toUpperCase()}
-            </Text>
-            <Text component="span"  title={email}>
-              {email}
-            </Text>
-            <Button
-              
-              onClick={() => logout()}
-              aria-label="Sign out"
-              title="Sign out"
-              disabled={isLoggingOut}
-              variant="subtle"
-            >
-              <Icon name="logout" />
-            </Button>
-          </Box>
-        </Box>
       </AppShell.Navbar>
 
-      <AppShell.Main >
-        <Box >
+      <AppShell.Main>
+        <Stack maw={1280} mx="auto" gap="xl" p={{ base: "md", md: "xl" }}>
           <StudyAssistantProvider value={assistantDisclosure.open}>
             {children}
           </StudyAssistantProvider>
-        </Box>
 
-        <Box component="footer" >
-          <Text component="span">Keep learning, one idea at a time.</Text>
-          <Text component="span">Second Brain</Text>
-        </Box>
+          <Group component="footer" justify="space-between" c="dimmed" fz="xs">
+            <Text size="xs">Keep learning, one idea at a time.</Text>
+            <Text size="xs">Second Brain</Text>
+          </Group>
+        </Stack>
       </AppShell.Main>
 
       <StudyAssistantPanel

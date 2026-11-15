@@ -1,9 +1,10 @@
 "use client";
 
 import {
-  Box,
+  Alert,
   Button,
   Group,
+  SimpleGrid,
   Select,
   Stack,
   Switch,
@@ -50,41 +51,40 @@ export function StudyNoteForm({ onSuccess }: StudyNoteFormProps = {}) {
   return (
     <form onSubmit={handleFormSubmit}>
       <Stack gap="md">
-      {formError ? (
-        <Box role="alert" mb="sm">
-          <Text>{formError}</Text>
-        </Box>
-      ) : null}
+        {formError ? (
+          <Alert color="red" variant="light" role="alert">
+            {formError}
+          </Alert>
+        ) : null}
 
-      <TextInput
-        id="question"
-        label="What do you want to understand?"
-        maxLength={500}
-        required
-        value={question}
-        onChange={(event) => setQuestion(event.currentTarget.value)}
-        placeholder="e.g. What problem does a message queue solve?"
-      />
+        <TextInput
+          id="question"
+          label="What do you want to understand?"
+          maxLength={500}
+          required
+          value={question}
+          onChange={(event) => setQuestion(event.currentTarget.value)}
+          placeholder="e.g. What problem does a message queue solve?"
+        />
 
-      <Textarea
-        id="sourceText"
-        label={
-          <>
-            Your notes or transcript{" "}
-            <Text component="span" c="dimmed" size="xs">
-              optional
-            </Text>
-          </>
-        }
-        maxLength={30000}
-        rows={4}
-        value={sourceText}
-        onChange={(event) => setSourceText(event.currentTarget.value)}
-        placeholder="Paste the useful excerpt, your rough notes, or a transcript…"
-      />
+        <Textarea
+          id="sourceText"
+          label={
+            <>
+              Your notes or transcript{" "}
+              <Text component="span" c="dimmed" size="xs">
+                optional
+              </Text>
+            </>
+          }
+          maxLength={30000}
+          rows={4}
+          value={sourceText}
+          onChange={(event) => setSourceText(event.currentTarget.value)}
+          placeholder="Paste the useful excerpt, your rough notes, or a transcript…"
+        />
 
-      <Group align="flex-start" grow>
-        <Box>
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
           <Select
             id="topic"
             label="Topic"
@@ -97,9 +97,7 @@ export function StudyNoteForm({ onSuccess }: StudyNoteFormProps = {}) {
             onChange={(value) => setTopicId(value ?? "")}
             placeholder="Select a topic"
           />
-        </Box>
 
-        <Box>
           <TextInput
             id="sourceUrl"
             type="url"
@@ -115,8 +113,7 @@ export function StudyNoteForm({ onSuccess }: StudyNoteFormProps = {}) {
             onChange={(event) => setSourceUrl(event.currentTarget.value)}
             placeholder="https://…"
           />
-        </Box>
-      </Group>
+        </SimpleGrid>
 
       <Group justify="space-between" align="center">
         <Switch

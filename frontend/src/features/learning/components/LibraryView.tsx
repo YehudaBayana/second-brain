@@ -1,6 +1,15 @@
 "use client";
 
-import { Box, Button, Paper, Text, ThemeIcon, Title } from "@mantine/core";
+import {
+  Button,
+  Group,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Text,
+  ThemeIcon,
+  Title,
+} from "@mantine/core";
 import Link from "next/link";
 import { Icon } from "./Icon";
 import { NoteCard } from "./NoteCard";
@@ -20,49 +29,51 @@ export function LibraryView() {
   }
 
   return (
-    <Box >
-      <Box >
-        <Box>
-          <Text >YOUR PERSONAL KNOWLEDGE BASE</Text>
-          <Title>My library</Title>
-          <Text>
+    <Stack gap="xl">
+      <Group justify="space-between" align="center" gap="lg" wrap="wrap">
+        <Stack gap="xs">
+          <Text size="xs" fw={700} tt="uppercase" c="indigo.7">
+            Your personal knowledge base
+          </Text>
+          <Title order={1}>My library</Title>
+          <Text c="dimmed">
             {stats.notes} notes across {topics.length} topics. Keep the ideas
             you’ll want to find again.
           </Text>
-        </Box>
+        </Stack>
         <Button
           component={Link}
           href="/"
-          
           leftSection={<Icon name="plus" size={16} />}
         >
           Add a note
         </Button>
-      </Box>
+      </Group>
 
       {notes.length > 0 ? (
-        <Box >
+        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
           {notes.map((note) => (
             <NoteCard key={note.id} note={note} />
           ))}
-        </Box>
+        </SimpleGrid>
       ) : (
-        <Paper >
-          <ThemeIcon  variant="light">
-            <Icon name="book" size={22} />
-          </ThemeIcon>
-          <Title order={3}>Your library is ready for its first idea.</Title>
-          <Text>Start with a question or something you just learned.</Text>
+        <Paper>
+          <Stack align="center" ta="center" gap="sm" py="xl">
+            <ThemeIcon size={56} variant="light" color="indigo">
+              <Icon name="book" size={22} />
+            </ThemeIcon>
+            <Title order={3}>Your library is ready for its first idea.</Title>
+            <Text c="dimmed">Start with a question or something you just learned.</Text>
           <Button
             component={Link}
             href="/"
-            
           >
             Create your first note
           </Button>
+          </Stack>
         </Paper>
       )}
-    </Box>
+    </Stack>
   );
 }
 

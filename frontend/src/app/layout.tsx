@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "@mantine/core/styles.css";
 import QueryProvider from "../providers/QueryProvider";
 import { MantineProvider } from "@mantine/core";
+import { theme } from "./theme";
 
 export const metadata: Metadata = {
   title: "Second Brain — Your personal learning space",
@@ -17,7 +18,9 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <QueryProvider>
-          <MantineProvider>{children}</MantineProvider>
+          <MantineProvider theme={theme} forceColorScheme="light">
+            {children}
+          </MantineProvider>
         </QueryProvider>
       </body>
     </html>
