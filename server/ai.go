@@ -79,6 +79,84 @@ Source notes (may be empty):
 	return lesson, nil
 }
 
+type generatedNoteChat struct {
+	Answer       string   `json:"answer"`
+	UpdateNote   bool     `json:"update_note"`
+	Title        string   `json:"title"`
+	Explanation  string   `json:"explanation"`
+	KeyTakeaways []string `json:"key_takeaways"`
+	CodeExamples []string `json:"code_examples"`
+}
+
+func generateNoteChat(ctx context.Context, client *genai.Client, item note, history []noteChatMessage, message string) (generatedNoteChat, error) {
+	if client == nil {
+		return generatedNoteChat{}, errors.New("Gemini client is not configured")
+	}
+	noteJSON, err := json.Marshal(map[string]any{
+		"title": item.Title, "question": item.Question, "source_text": item.SourceText,
+		"explanation": item.Explanation, "key_takeaways": item.KeyTakeaways,
+		"code_examples": item.CodeExamples,
+	})
+	if err != nil {
+		return generatedNoteChat{}, fmt.Errorf("encode note context: %w", err)
+	}
+	historyJSON, err := json.Marshal(history)
+	if err != nil {
+		return generatedNoteChat{}, fmt.Errorf("encode chat history: %w", err)
+	}
+	prompt := fmt.Sprintf(`You are a study assistant continuing a conversation about one saved note.
+Answer the user's latest message using the note and conversation as context. Be accurate and concise.
+Set update_note to true only when the discussion establishes useful, accurate content that should be added or corrected in the saved note. Otherwise set it to false.
+When update_note is true, return the complete revised note fields. Preserve existing useful content and do not invent facts. When false, return the current note fields unchanged.
+
+Saved note:
+%s
+
+Recent conversation (JSON):
+%s
+
+Latest user message:
+%s`, noteJSON, historyJSON, message)
+	stringSchema := &genai.Schema{Type: genai.TypeString}
+	result, err := client.Models.GenerateContent(ctx, "gemini-3.5-flash", []*genai.Content{
+		genai.NewContentFromText(prompt, genai.RoleUser),
+	}, &genai.GenerateContentConfig{
+		Temperature:      genai.Ptr[float32](0.3),
+		MaxOutputTokens:  4096,
+		ResponseMIMEType: "application/json",
+		ResponseSchema: &genai.Schema{
+			Type: genai.TypeObject,
+			Properties: map[string]*genai.Schema{
+				"answer":        stringSchema,
+				"update_note":   {Type: genai.TypeBoolean},
+				"title":         stringSchema,
+				"explanation":   stringSchema,
+				"key_takeaways": {Type: genai.TypeArray, Items: stringSchema},
+				"code_examples": {Type: genai.TypeArray, Items: stringSchema},
+			},
+			Required: []string{"answer", "update_note", "title", "explanation", "key_takeaways", "code_examples"},
+		},
+	})
+	if err != nil {
+		return generatedNoteChat{}, err
+	}
+	if result == nil {
+		return generatedNoteChat{}, errors.New("Gemini returned an empty response")
+	}
+	var reply generatedNoteChat
+	if err := json.Unmarshal([]byte(result.Text()), &reply); err != nil {
+		return generatedNoteChat{}, fmt.Errorf("decode Gemini chat response: %w", err)
+	}
+	reply.Answer = strings.TrimSpace(reply.Answer)
+	reply.Title = strings.TrimSpace(reply.Title)
+	reply.Explanation = strings.TrimSpace(reply.Explanation)
+	if reply.Answer == "" || (reply.UpdateNote &&
+		(reply.Title == "" || reply.Explanation == "" || reply.KeyTakeaways == nil || reply.CodeExamples == nil)) {
+		return generatedNoteChat{}, errors.New("Gemini response is missing required chat content")
+	}
+	return reply, nil
+}
+
 func embedLearningText(ctx context.Context, client *genai.Client, content string) (string, error) {
 	if client == nil {
 		return "", errors.New("Gemini client is not configured")

@@ -42,6 +42,7 @@ export const learningKeys = {
   all: ["learning"] as const,
   topics: () => [...learningKeys.all, "topics"] as const,
   notes: () => [...learningKeys.all, "notes"] as const,
+  note: (noteId: string) => [...learningKeys.all, "note", noteId] as const,
   dueCards: () => [...learningKeys.all, "due-cards"] as const,
   stats: () => [...learningKeys.all, "stats"] as const,
 };

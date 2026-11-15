@@ -49,11 +49,11 @@ export function useStudyNoteForm() {
 
     if (!question.trim()) {
       setFormError("Please enter a question or topic to study.");
-      return;
+      return false;
     }
     if (!selectedTopicId) {
       setFormError("Please select a topic.");
-      return;
+      return false;
     }
 
     try {
@@ -67,12 +67,14 @@ export function useStudyNoteForm() {
 
       setCreatedNote(result);
       resetForm();
+      return true;
     } catch (cause) {
       setFormError(
         cause instanceof Error
           ? cause.message
           : "Could not create your study note.",
       );
+      return false;
     }
   };
 

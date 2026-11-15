@@ -88,6 +88,8 @@ func main() {
 	mux.Handle("POST /api/topics", protectedWrite(http.HandlerFunc(learningAPI.HandleTopics)))
 	mux.Handle("GET /api/notes", protected(http.HandlerFunc(learningAPI.HandleNotes)))
 	mux.Handle("POST /api/notes", protectedWrite(http.HandlerFunc(learningAPI.HandleNotes)))
+	mux.Handle("GET /api/notes/{noteID}", protected(http.HandlerFunc(learningAPI.HandleNote)))
+	mux.Handle("POST /api/notes/{noteID}/chat", protectedWrite(http.HandlerFunc(learningAPI.HandleNoteChat)))
 	mux.Handle("GET /api/search", protected(http.HandlerFunc(learningAPI.HandleSearch)))
 	mux.Handle("GET /api/review/due", protected(http.HandlerFunc(learningAPI.HandleDueReviews)))
 	mux.Handle("POST /api/review/{cardID}", protectedWrite(http.HandlerFunc(learningAPI.HandleGradeReview)))

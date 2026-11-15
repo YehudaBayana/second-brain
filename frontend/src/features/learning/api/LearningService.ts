@@ -7,6 +7,9 @@ import type {
   CreatedNote,
   Flashcard,
   LearningStats,
+  NoteChatMessage,
+  NoteChatResponse,
+  NoteDetail,
   Note,
   ReviewGrade,
   Topic,
@@ -27,6 +30,21 @@ export class LearningApiService {
 
   public getNotes(options?: RequestOptions): Promise<Note[]> {
     return this.http.get<Note[]>("/api/notes", options);
+  }
+
+  public getNote(noteId: string): Promise<NoteDetail> {
+    return this.http.get<NoteDetail>(`/api/notes/${encodeURIComponent(noteId)}`);
+  }
+
+  public chatAboutNote(
+    noteId: string,
+    message: string,
+    history: NoteChatMessage[],
+  ): Promise<NoteChatResponse> {
+    return this.http.post<NoteChatResponse>(
+      `/api/notes/${encodeURIComponent(noteId)}/chat`,
+      { message, history },
+    );
   }
 
   public getDueCards(options?: RequestOptions): Promise<Flashcard[]> {

@@ -24,6 +24,7 @@ const (
 	maxQuestionLength = 500
 	maxSourceText     = 30000
 	maxSourceURL      = 2048
+	maxChatMessage    = 2000
 )
 
 var reviewIntervals = [...]int{1, 3, 7, 14, 30}
@@ -56,6 +57,11 @@ type note struct {
 	CreatedAt    time.Time `json:"createdAt"`
 }
 
+type noteDetail struct {
+	Note  note        `json:"note"`
+	Cards []flashcard `json:"cards"`
+}
+
 type flashcard struct {
 	ID             uuid.UUID `json:"id"`
 	NoteID         uuid.UUID `json:"noteId"`
@@ -86,6 +92,22 @@ type createNoteRequest struct {
 	SourceText string `json:"source_text"`
 	SourceURL  string `json:"source_url"`
 	SaveToDeck bool   `json:"save_to_deck"`
+}
+
+type noteChatMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type noteChatRequest struct {
+	Message string            `json:"message"`
+	History []noteChatMessage `json:"history"`
+}
+
+type noteChatResponse struct {
+	Answer  string `json:"answer"`
+	Note    note   `json:"note"`
+	Updated bool   `json:"updated"`
 }
 
 func (api *LearningAPI) HandleTopics(w http.ResponseWriter, r *http.Request) {
@@ -214,6 +236,196 @@ func (api *LearningAPI) HandleNotes(w http.ResponseWriter, r *http.Request) {
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
+}
+
+func (api *LearningAPI) HandleNote(w http.ResponseWriter, r *http.Request) {
+	userID, ok := auth.UserIDFrom(r.Context())
+	if !ok {
+		writeLearningError(w, http.StatusUnauthorized, "authentication required")
+		return
+	}
+	noteID, err := uuid.Parse(r.PathValue("noteID"))
+	if err != nil {
+		writeLearningError(w, http.StatusUnprocessableEntity, "invalid note id")
+		return
+	}
+	item, err := api.loadNote(r.Context(), userID, noteID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		writeLearningError(w, http.StatusNotFound, "note not found")
+		return
+	}
+	if err != nil {
+		log.Printf("Load note: %v", err)
+		writeLearningError(w, http.StatusInternalServerError, "could not load note")
+		return
+	}
+	rows, err := api.db.Query(r.Context(), `
+		SELECT f.id, f.note_id, t.name, n.title, f.front_question, f.back_answer,
+		       f.memory_level, f.next_review_date::text
+		FROM flashcards f
+		JOIN notes n ON n.id = f.note_id
+		JOIN topics t ON t.id = f.topic_id
+		WHERE f.note_id = $1 AND n.user_id = $2
+		ORDER BY f.next_review_date, f.id`, noteID, userID)
+	if err != nil {
+		log.Printf("Load note flashcards: %v", err)
+		writeLearningError(w, http.StatusInternalServerError, "could not load note")
+		return
+	}
+	defer rows.Close()
+	cards := make([]flashcard, 0)
+	for rows.Next() {
+		var card flashcard
+		if err := rows.Scan(&card.ID, &card.NoteID, &card.TopicName, &card.NoteTitle,
+			&card.FrontQuestion, &card.BackAnswer, &card.MemoryLevel, &card.NextReviewDate); err != nil {
+			log.Printf("Read note flashcard: %v", err)
+			writeLearningError(w, http.StatusInternalServerError, "could not load note")
+			return
+		}
+		cards = append(cards, card)
+	}
+	if err := rows.Err(); err != nil {
+		log.Printf("Iterate note flashcards: %v", err)
+		writeLearningError(w, http.StatusInternalServerError, "could not load note")
+		return
+	}
+	writeLearningJSON(w, http.StatusOK, noteDetail{Note: item, Cards: cards})
+}
+
+func (api *LearningAPI) HandleNoteChat(w http.ResponseWriter, r *http.Request) {
+	userID, ok := auth.UserIDFrom(r.Context())
+	if !ok {
+		writeLearningError(w, http.StatusUnauthorized, "authentication required")
+		return
+	}
+	noteID, err := uuid.Parse(r.PathValue("noteID"))
+	if err != nil {
+		writeLearningError(w, http.StatusUnprocessableEntity, "invalid note id")
+		return
+	}
+	var input noteChatRequest
+	if !decodeLearningJSON(w, r, &input) {
+		return
+	}
+	input.Message = strings.TrimSpace(input.Message)
+	if input.Message == "" || len(input.Message) > maxChatMessage {
+		writeLearningError(w, http.StatusUnprocessableEntity, "message must be between 1 and 2,000 characters")
+		return
+	}
+	if len(input.History) > 20 {
+		writeLearningError(w, http.StatusUnprocessableEntity, "chat history is too long")
+		return
+	}
+	for _, message := range input.History {
+		if (message.Role != "user" && message.Role != "assistant") || len(message.Content) > maxChatMessage {
+			writeLearningError(w, http.StatusUnprocessableEntity, "invalid chat history")
+			return
+		}
+	}
+
+	item, err := api.loadNote(r.Context(), userID, noteID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		writeLearningError(w, http.StatusNotFound, "note not found")
+		return
+	}
+	if err != nil {
+		log.Printf("Load note for chat: %v", err)
+		writeLearningError(w, http.StatusInternalServerError, "could not load note")
+		return
+	}
+
+	generationContext, cancelGeneration := context.WithTimeout(r.Context(), 60*time.Second)
+	defer cancelGeneration()
+	reply, err := generateNoteChat(generationContext, api.ai, item, input.History, input.Message)
+	if err != nil {
+		log.Printf("Generate note chat response: %v", err)
+		if api.ai == nil {
+			writeLearningError(w, http.StatusServiceUnavailable, "AI is not configured; set GEMINI_API_KEY and restart the API")
+			return
+		}
+		writeLearningError(w, http.StatusBadGateway, "AI could not answer; please try again")
+		return
+	}
+
+	if reply.UpdateNote {
+		embeddingText := strings.Join([]string{
+			item.Title, item.Question, item.SourceText, reply.Title, reply.Explanation,
+			strings.Join(reply.KeyTakeaways, "\n"), strings.Join(reply.CodeExamples, "\n"),
+		}, "\n")
+		embeddingContext, cancelEmbedding := context.WithTimeout(r.Context(), 30*time.Second)
+		defer cancelEmbedding()
+		embedding, err := embedLearningText(embeddingContext, api.ai, embeddingText)
+		if err != nil {
+			log.Printf("Embed updated note: %v", err)
+			writeLearningError(w, http.StatusBadGateway, "AI could not update note search; please try again")
+			return
+		}
+		takeawaysJSON, err := json.Marshal(reply.KeyTakeaways)
+		if err != nil {
+			log.Printf("Encode updated note takeaways: %v", err)
+			writeLearningError(w, http.StatusInternalServerError, "could not update note")
+			return
+		}
+		examplesJSON, err := json.Marshal(reply.CodeExamples)
+		if err != nil {
+			log.Printf("Encode updated note examples: %v", err)
+			writeLearningError(w, http.StatusInternalServerError, "could not update note")
+			return
+		}
+		err = api.db.QueryRow(r.Context(), `
+			UPDATE notes
+			SET title = $1, ai_explanation = $2, key_takeaways = $3::jsonb,
+			    code_examples = $4::jsonb, embedding = $5::vector
+			WHERE id = $6 AND user_id = $7
+			RETURNING title, ai_explanation, key_takeaways, code_examples`,
+			reply.Title, reply.Explanation, string(takeawaysJSON), string(examplesJSON), embedding,
+			noteID, userID,
+		).Scan(&item.Title, &item.Explanation, &takeawaysJSON, &examplesJSON)
+		if err != nil {
+			log.Printf("Update note from chat: %v", err)
+			writeLearningError(w, http.StatusInternalServerError, "could not update note")
+			return
+		}
+		if err := json.Unmarshal(takeawaysJSON, &item.KeyTakeaways); err != nil {
+			log.Printf("Read updated note takeaways: %v", err)
+			writeLearningError(w, http.StatusInternalServerError, "could not update note")
+			return
+		}
+		if err := json.Unmarshal(examplesJSON, &item.CodeExamples); err != nil {
+			log.Printf("Read updated note examples: %v", err)
+			writeLearningError(w, http.StatusInternalServerError, "could not update note")
+			return
+		}
+	}
+
+	writeLearningJSON(w, http.StatusOK, noteChatResponse{
+		Answer:  reply.Answer,
+		Note:    item,
+		Updated: reply.UpdateNote,
+	})
+}
+
+func (api *LearningAPI) loadNote(ctx context.Context, userID, noteID uuid.UUID) (note, error) {
+	var item note
+	var takeaways, examples []byte
+	err := api.db.QueryRow(ctx, `
+		SELECT n.id, n.topic_id, t.name, n.title, n.question_asked, n.source_text,
+		       n.ai_explanation, n.key_takeaways, n.code_examples, n.source_url, n.created_at
+		FROM notes n
+		JOIN topics t ON t.id = n.topic_id
+		WHERE n.id = $1 AND n.user_id = $2`, noteID, userID,
+	).Scan(&item.ID, &item.TopicID, &item.TopicName, &item.Title, &item.Question,
+		&item.SourceText, &item.Explanation, &takeaways, &examples, &item.SourceURL, &item.CreatedAt)
+	if err != nil {
+		return note{}, err
+	}
+	if err := json.Unmarshal(takeaways, &item.KeyTakeaways); err != nil {
+		return note{}, err
+	}
+	if err := json.Unmarshal(examples, &item.CodeExamples); err != nil {
+		return note{}, err
+	}
+	return item, nil
 }
 
 func (api *LearningAPI) handleCreateNote(w http.ResponseWriter, r *http.Request, userID uuid.UUID) {

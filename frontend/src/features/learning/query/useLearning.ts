@@ -5,7 +5,9 @@ import {
 } from "@tanstack/react-query";
 import {
   createNote,
+  chatAboutNote,
   getDueCards,
+  getNote,
   getLearningStats,
   getNotes,
   getTopics,
@@ -16,6 +18,8 @@ import type {
   Flashcard,
   LearningStats,
   Note,
+  NoteChatMessage,
+  NoteDetail,
   ReviewGrade,
 } from "../model/types";
 import { FlashcardEntity } from "@/src/domain/entities/FlashcardEntity";
@@ -49,6 +53,54 @@ export function useNotes() {
   return useQuery({
     ...learningQueries.notes(),
     select: (notes: Note[]) => NoteEntity.fromRawList(notes),
+  });
+}
+
+export function useNote(noteId: string) {
+  return useQuery({
+    queryKey: learningKeys.note(noteId),
+    queryFn: () => getNote(noteId),
+    select: (detail: NoteDetail) => ({
+      ...detail,
+      note: NoteEntity.fromRaw(detail.note),
+    }),
+    enabled: Boolean(noteId),
+  });
+}
+
+export function useChatAboutNote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      noteId,
+      message,
+      history,
+    }: {
+      noteId: string;
+      message: string;
+      history: NoteChatMessage[];
+    }) => chatAboutNote(noteId, message, history),
+    onSuccess: async (result) => {
+      queryClient.setQueryData<NoteDetail>(
+        learningKeys.note(result.note.id),
+        (detail) =>
+          detail && {
+            ...detail,
+            note: result.note,
+            cards: detail.cards.map((card) => ({
+              ...card,
+              noteTitle: result.note.title,
+            })),
+          },
+      );
+      queryClient.setQueryData<Note[]>(learningKeys.notes(), (notes) =>
+        notes?.map((note) => (note.id === result.note.id ? result.note : note)),
+      );
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: learningKeys.notes() }),
+        queryClient.invalidateQueries({ queryKey: learningKeys.dueCards() }),
+      ]);
+    },
   });
 }
 

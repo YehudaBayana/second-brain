@@ -41,8 +41,8 @@ export function StudyNoteForm({ onSuccess }: StudyNoteFormProps = {}) {
   } = useStudyNoteForm();
 
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    await handleSubmit(event);
-    if (onSuccess) onSuccess();
+    const succeeded = await handleSubmit(event);
+    if (succeeded) onSuccess?.();
   };
 
   return (

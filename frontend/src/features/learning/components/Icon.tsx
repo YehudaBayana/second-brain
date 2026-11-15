@@ -11,6 +11,7 @@ import {
   FiPlus,
   FiRotateCcw,
   FiSearch,
+  FiX,
   FiZap,
 } from "react-icons/fi";
 import type { IconType } from "react-icons";
@@ -30,6 +31,7 @@ const icons = {
   forgot: FiRotateCcw,
   up: FiArrowUp,
   easy: FiZap,
+  close: FiX,
 } satisfies Record<string, IconType>;
 
 export type IconName = keyof typeof icons;

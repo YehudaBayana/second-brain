@@ -15,6 +15,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { Icon, type IconName } from "@/src/features/learning/components/Icon";
+import { StudyAssistantPanel } from "@/src/features/learning/components/StudyAssistantPanel";
+import { StudyAssistantProvider } from "@/src/features/learning/components/StudyAssistantContext";
 import { useLearningStats } from "@/src/features/learning/query/useLearning";
 import { useAuth } from "@/src/features/auth/hooks/useAuth";
 
@@ -65,6 +67,7 @@ export function AppShellLayout({
   const { data: stats } = useLearningStats();
   const { user, logout, isLoggingOut } = useAuth();
   const [opened, { toggle }] = useDisclosure();
+  const [assistantOpened, assistantDisclosure] = useDisclosure(false);
   const resize = useAppShellResize({
     navbar: { min: 200, max: 500 },
     header: { min: 48, max: 120 },
@@ -75,6 +78,7 @@ export function AppShellLayout({
 
   const currentLabel =
     routeLabels[pathname] ??
+    (pathname.startsWith("/notes/") ? "Study note" : undefined) ??
     Object.entries(routeLabels).find(
       ([route]) => route !== "/" && pathname.startsWith(route),
     )?.[1] ??
@@ -87,6 +91,7 @@ export function AppShellLayout({
 
   return (
     <AppShell
+      className={assistantOpened ? "assistant-open" : ""}
       header={{ height: 60 }}
       navbar={{
         width: 300,
@@ -129,6 +134,17 @@ export function AppShellLayout({
               className="reset-layout-button"
             >
               Reset layout
+            </Button>
+            <Button
+              onClick={assistantDisclosure.toggle}
+              variant="default"
+              size="xs"
+              className="assistant-toggle"
+              aria-expanded={assistantOpened}
+              aria-controls="study-assistant-panel"
+              leftSection={<Icon name="sparkle" size={14} />}
+            >
+              Save something new
             </Button>
           </Group>
         </Group>
@@ -211,13 +227,23 @@ export function AppShellLayout({
       </AppShell.Navbar>
 
       <AppShell.Main className="main-panel">
-        <Box className="content-wrap app-shell-content-wrap">{children}</Box>
+        <Box className="content-wrap app-shell-content-wrap">
+          <StudyAssistantProvider value={assistantDisclosure.open}>
+            {children}
+          </StudyAssistantProvider>
+        </Box>
 
         <Box component="footer" className="app-footer app-shell-footer">
           <Text component="span">Keep learning, one idea at a time.</Text>
           <Text component="span">Second Brain</Text>
         </Box>
       </AppShell.Main>
+
+      <StudyAssistantPanel
+        id="study-assistant-panel"
+        opened={assistantOpened}
+        onClose={assistantDisclosure.close}
+      />
     </AppShell>
   );
 }

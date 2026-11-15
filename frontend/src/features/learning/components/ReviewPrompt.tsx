@@ -11,8 +11,6 @@ export function ReviewPrompt({ dueToday, onSaveIdea }: ReviewPromptProps) {
   const handleSaveIdea = () => {
     if (onSaveIdea) {
       onSaveIdea();
-    } else {
-      document.getElementById("question")?.focus();
     }
   };
 

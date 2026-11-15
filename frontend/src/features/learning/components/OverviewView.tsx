@@ -2,13 +2,11 @@
 
 import { Box, Button, Paper, Text, ThemeIcon, Title } from "@mantine/core";
 import Link from "next/link";
-import { CreatedNotePanel } from "./CreatedNotePanel";
 import { Icon } from "./Icon";
 import { NoteCard } from "./NoteCard";
 import { ReviewPrompt } from "./ReviewPrompt";
-import { StudyNoteForm } from "./StudyNoteForm";
 import { useLearningDashboard } from "../hooks/useLearningDashboard";
-import { useStudyNoteForm } from "../hooks/useStudyNoteForm";
+import { useOpenStudyAssistant } from "./StudyAssistantContext";
 import { LearningViewSkeleton } from "@/src/components/feedback/LearningViewSkeleton";
 
 function StatCard({
@@ -39,11 +37,10 @@ function StatCard({
 /**
  * OverviewView
  * Clean, hook-driven dashboard for the main learning overview.
- * Eliminates props drilling by consuming useLearningDashboard() and useStudyNoteForm().
  */
 export function OverviewView() {
   const { greetingName, notes, stats, isLoading } = useLearningDashboard();
-  const { createdNote } = useStudyNoteForm();
+  const openStudyAssistant = useOpenStudyAssistant();
 
   if (isLoading) {
     return <LearningViewSkeleton view="overview" />;
@@ -97,26 +94,13 @@ export function OverviewView() {
         />
       </Box>
 
-      {/* Main Form and Action Columns */}
+      {/* Review actions */}
       <Box className="dashboard-columns">
-        <Paper className="panel capture-panel">
-          <Box className="panel-heading">
-            <Box>
-              <Text className="eyebrow">SAVE SOMETHING NEW</Text>
-              <Title order={2}>Turn a spark into a study note</Title>
-            </Box>
-            <ThemeIcon className="heading-icon" variant="light">
-              <Icon name="plus" />
-            </ThemeIcon>
-          </Box>
-          <StudyNoteForm />
-        </Paper>
-
-        <ReviewPrompt dueToday={stats.dueToday} />
+        <ReviewPrompt
+          dueToday={stats.dueToday}
+          onSaveIdea={openStudyAssistant}
+        />
       </Box>
-
-      {/* Created Note Feedback Panel */}
-      {createdNote ? <CreatedNotePanel createdNote={createdNote} /> : null}
 
       {/* Recent Notes Section */}
       {notes.length > 0 ? (

@@ -57,6 +57,22 @@ export type CreateNoteInput = {
   save_to_deck: boolean;
 };
 
+export type NoteChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+export type NoteChatResponse = {
+  answer: string;
+  note: Note;
+  updated: boolean;
+};
+
+export type NoteDetail = {
+  note: Note;
+  cards: Flashcard[];
+};
+
 export type ReviewGrade = "forgot" | "got_it" | "too_easy";
 
 export type Section = "overview" | "library" | "review" | "search";
