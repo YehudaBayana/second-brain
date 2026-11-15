@@ -37,3 +37,11 @@ export const folderKeys = {
   contents: (id: string) => [...folderKeys.all, "contents", id] as const,
   trash: () => [...folderKeys.all, "trash"] as const,
 };
+
+export const learningKeys = {
+  all: ["learning"] as const,
+  topics: () => [...learningKeys.all, "topics"] as const,
+  notes: () => [...learningKeys.all, "notes"] as const,
+  dueCards: () => [...learningKeys.all, "due-cards"] as const,
+  stats: () => [...learningKeys.all, "stats"] as const,
+};

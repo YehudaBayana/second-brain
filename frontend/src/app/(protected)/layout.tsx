@@ -1,24 +1,49 @@
-import { ResizableAppShell } from "@/src/components/appShell/AppShell";
+import { Suspense } from "react";
 import { getSession } from "@/src/services/auth";
 import { redirect } from "next/navigation";
-import { Suspense } from "react";
-// Import your auth verification helper (e.g., from Supabase, NextAuth, Firebase, etc.)
+import { AppShellLayout } from "@/src/components/layout/AppShellLayout";
+import { AppShellSkeleton } from "@/src/components/feedback/AppShellSkeleton";
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
+import { authKeys } from "@/src/services/keys";
 
-export default async function ProtectedLayout({
+export default function ProtectedLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense fallback={<AppShellSkeleton />}>
+      <AuthenticatedLayout>{children}</AuthenticatedLayout>
+    </Suspense>
+  );
+}
+
+async function AuthenticatedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const session = await getSession();
 
-  // Double check authentication on the server
   if (!session?.user) {
-    redirect("/auth");
+    redirect("/auth/login");
   }
 
+  const queryClient = new QueryClient();
+  queryClient.setQueryData(authKeys.me(), session);
+
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <ResizableAppShell>{children}</ResizableAppShell>
-    </Suspense>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <AppShellLayout
+        userEmail={session.user.email}
+        currentDate={new Date().toISOString()}
+      >
+        {children}
+      </AppShellLayout>
+    </HydrationBoundary>
   );
 }

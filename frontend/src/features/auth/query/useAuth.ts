@@ -40,7 +40,7 @@ export function useLogout() {
   return useMutation({
     mutationFn: logout,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: authKeys.me() });
+      queryClient.setQueryData(authKeys.me(), null);
     },
   });
 }

@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Second Brain frontend
 
-## Getting Started
+The frontend is a Next.js App Router application. Route files compose feature
+views; feature modules own their API access, query hooks, interaction hooks, and
+feature-specific state.
 
-First, run the development server:
+## Architecture
+
+- `src/app` contains route entry points and layouts. Keep route pages as Server
+  Components and put interactive UI behind Client Component boundaries.
+- `src/features/<feature>` contains feature-owned components, hooks, query
+  definitions, API services, and models. Keep feature state here rather than
+  adding unrelated global state.
+- `src/domain` contains entities and business rules that should not depend on
+  the UI.
+- `src/services` contains cross-feature infrastructure such as HTTP clients
+  and query keys.
+
+Use TanStack Query for remote/server state. Define a query key and fetcher once
+in the feature query module, then reuse it for both server prefetching and client
+hooks. Keep prefetched data serializable across the Server/Client boundary;
+convert DTOs to domain entities in query selectors.
+
+Use component props for values a child directly needs. For state shared across
+several screens, use the feature's Zustand store; use local state for short-lived
+interaction state. Avoid mirroring query data in Zustand or introducing a
+global store for state with a single owner.
+
+## Rendering and loading
+
+Authenticated routes read the session on the server. Keep request-dependent
+session and data work behind Suspense boundaries so Cache Components can render
+a static shell and stream in the authenticated page. Prefetch page data on the
+server and hydrate the same query keys on the client to avoid an empty-data
+flash. Route `loading.tsx` fallbacks and client query fallbacks should use the
+shared skeletons in `src/components/feedback`.
+
+## Development
 
 ```bash
-npm run dev
-# or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
+yarn lint
+yarn tsc --noEmit
+yarn build --webpack
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import "@mantine/core/styles.css";
 import "./globals.css";
 import QueryProvider from "../providers/QueryProvider";
 import { MantineProvider } from "@mantine/core";
@@ -19,7 +20,11 @@ export const metadata: Metadata = {
   description: "Save useful ideas, connect what you learn, and make it stick.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html
       lang="en"
