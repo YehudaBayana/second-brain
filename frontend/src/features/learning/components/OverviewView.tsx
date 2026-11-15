@@ -92,9 +92,7 @@ export function OverviewView() {
           label="Due to review"
           value={stats.dueToday}
           description={
-            stats.dueToday === 1
-              ? "A quick review today"
-              : "Ready when you are"
+            stats.dueToday === 1 ? "A quick review today" : "Ready when you are"
           }
         />
       </Box>
@@ -131,7 +129,7 @@ export function OverviewView() {
             <Button
               component={Link}
               href="/library"
-              variant="subtle"
+              variant="default"
               rightSection={<Icon name="arrow" size={14} />}
             >
               View all {notes.length} notes

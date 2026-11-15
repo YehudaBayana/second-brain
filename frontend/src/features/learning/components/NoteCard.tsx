@@ -29,41 +29,6 @@ export function NoteCard({ note: rawNote }: { note: Note | NoteEntity }) {
       <Text className="note-question">{note.question}</Text>
       <Text className="note-excerpt">{note.explanation}</Text>
 
-      <Accordion className="note-details">
-        <Accordion.Item value={note.id} className="note-details-item">
-          <Accordion.Control className="note-details-control">
-            Read full note
-          </Accordion.Control>
-          <Accordion.Panel className="note-detail-content">
-            <Text>{note.explanation}</Text>
-            {note.keyTakeaways.length > 0 ? (
-              <List>
-                {note.keyTakeaways.map((takeaway, index) => (
-                  <List.Item key={`${index}-${takeaway}`}>
-                    {takeaway}
-                  </List.Item>
-                ))}
-              </List>
-            ) : null}
-            {note.codeExamples.map((example, index) => (
-              <Code
-                block
-                className="code-example"
-                key={`${index}-${example.slice(0, 24)}`}
-              >
-                {example}
-              </Code>
-            ))}
-            {note.sourceText ? (
-              <Box className="note-source">
-                <Text component="strong">Your source notes</Text>
-                <Text>{note.sourceText}</Text>
-              </Box>
-            ) : null}
-          </Accordion.Panel>
-        </Accordion.Item>
-      </Accordion>
-
       <Box className="note-card-bottom">
         <Text>{note.takeawaysCount} key ideas</Text>
         {note.hasSourceUrl && note.sourceUrl ? (
