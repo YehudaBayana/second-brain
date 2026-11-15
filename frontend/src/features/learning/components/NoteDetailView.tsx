@@ -16,7 +16,7 @@ export function NoteDetailView({ noteId }: { noteId: string }) {
   }
   if (query.isError) {
     return (
-      <Paper className="empty-panel" role="alert">
+      <Paper  role="alert">
         <Title order={3}>Could not open this note</Title>
         <Text>{query.error.message}</Text>
         <Button component={Link} href="/library" variant="default">
@@ -31,10 +31,10 @@ export function NoteDetailView({ noteId }: { noteId: string }) {
   const entity = NoteEntity.fromRaw(note);
 
   return (
-    <Box className="note-detail-view">
-      <Box className="page-heading note-detail-heading">
+    <Box >
+      <Box >
         <Box>
-          <Text className="eyebrow">{entity.topicName}</Text>
+          <Text >{entity.topicName}</Text>
           <Title>{entity.displayTitle}</Title>
           <Text>{entity.formattedDate}</Text>
         </Box>
@@ -48,16 +48,16 @@ export function NoteDetailView({ noteId }: { noteId: string }) {
         </Button>
       </Box>
 
-      <Paper className="panel note-detail-content-panel">
-        <Text className="eyebrow">YOUR QUESTION</Text>
+      <Paper >
+        <Text >YOUR QUESTION</Text>
         <Title order={2}>{note.question}</Title>
-        <Text className="eyebrow note-content-eyebrow">STUDY NOTE</Text>
-        <Text className="note-detail-explanation">{note.explanation}</Text>
+        <Text >STUDY NOTE</Text>
+        <Text >{note.explanation}</Text>
 
         {note.keyTakeaways.length > 0 ? (
-          <Box className="note-detail-section">
+          <Box >
             <Title order={3}>Key takeaways</Title>
-            <List className="takeaway-list">
+            <List >
               {note.keyTakeaways.map((item, index) => (
                 <List.Item key={`${index}-${item}`}>{item}</List.Item>
               ))}
@@ -66,12 +66,12 @@ export function NoteDetailView({ noteId }: { noteId: string }) {
         ) : null}
 
         {note.codeExamples.length > 0 ? (
-          <Box className="note-detail-section">
+          <Box >
             <Title order={3}>Examples</Title>
             {note.codeExamples.map((example, index) => (
               <Code
                 block
-                className="code-example"
+                
                 key={`${index}-${example.slice(0, 24)}`}
               >
                 {example}
@@ -80,12 +80,12 @@ export function NoteDetailView({ noteId }: { noteId: string }) {
           </Box>
         ) : null}
 
-        <Box className="note-detail-section">
+        <Box >
           <Title order={3}>Source material</Title>
           {note.sourceText ? (
-            <Text className="note-source-text">{note.sourceText}</Text>
+            <Text >{note.sourceText}</Text>
           ) : (
-            <Text className="muted-copy">No source text was added.</Text>
+            <Text >No source text was added.</Text>
           )}
           {note.sourceUrl ? (
             <Button
@@ -102,16 +102,16 @@ export function NoteDetailView({ noteId }: { noteId: string }) {
         </Box>
 
         {cards.length > 0 ? (
-          <Box className="note-detail-section">
+          <Box >
             <Title order={3}>Review cards</Title>
-            <Box className="note-detail-cards">
+            <Box >
               {cards.map((card) => (
-                <Paper className="note-review-card" key={card.id}>
-                  <Text className="eyebrow">QUESTION</Text>
+                <Paper  key={card.id}>
+                  <Text >QUESTION</Text>
                   <Text>{card.frontQuestion}</Text>
-                  <Text className="eyebrow">ANSWER</Text>
+                  <Text >ANSWER</Text>
                   <Text>{card.backAnswer}</Text>
-                  <Text className="muted-copy">
+                  <Text >
                     Next review: {card.nextReviewDate}
                   </Text>
                 </Paper>
@@ -121,10 +121,10 @@ export function NoteDetailView({ noteId }: { noteId: string }) {
         ) : null}
       </Paper>
 
-      <Paper className="panel note-detail-chat-panel">
-        <Text className="eyebrow">KEEP EXPLORING</Text>
+      <Paper >
+        <Text >KEEP EXPLORING</Text>
         <Title order={2}>Ask about this note</Title>
-        <Text className="assistant-intro">
+        <Text >
           Follow-up answers use this note and your conversation as context.
           Useful changes can be added to the saved note automatically.
         </Text>

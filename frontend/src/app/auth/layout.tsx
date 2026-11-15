@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { getSession } from "@/src/services/auth";
 import { redirect } from "next/navigation";
-import { Box } from "@mantine/core";
+import { Flex } from "@mantine/core";
 import { AuthSkeleton } from "@/src/components/feedback/AuthSkeleton";
 
 export default function AuthLayout({
@@ -28,17 +28,8 @@ async function UnauthenticatedLayout({
   }
 
   return (
-    <Box
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1rem",
-        background: "var(--paper, #f7f7fb)",
-      }}
-    >
+    <Flex mih="100vh" align="center" justify="center" p="md">
       {children}
-    </Box>
+    </Flex>
   );
 }

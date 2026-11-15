@@ -22,10 +22,10 @@ export function SearchView() {
   } = useNoteSearch();
 
   return (
-    <Box className="search-view">
-      <Box className="page-heading">
+    <Box >
+      <Box >
         <Box>
-          <Text className="eyebrow">MEANING, NOT JUST KEYWORDS</Text>
+          <Text >MEANING, NOT JUST KEYWORDS</Text>
           <Title>Find that idea again</Title>
           <Text>
             Search your saved notes with a phrase or a question. Similar
@@ -35,22 +35,22 @@ export function SearchView() {
       </Box>
 
       {searchError ? (
-        <Box className="error-banner" role="alert" mb="md">
+        <Box  role="alert" mb="md">
           <Text>{searchError}</Text>
         </Box>
       ) : null}
 
-      <Box component="form" className="search-form" onSubmit={handleSearch}>
+      <Box component="form"  onSubmit={handleSearch}>
         <Icon name="search" size={20} />
         <TextInput
           aria-label="Search your notes"
-          classNames={{ root: "search-field" }}
+          
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.currentTarget.value)}
           placeholder="e.g. How do queues make slow work reliable?"
         />
         <Button
-          className="button button-primary"
+          
           type="submit"
           disabled={isSearching || !searchTerm.trim()}
           loading={isSearching}
@@ -60,10 +60,10 @@ export function SearchView() {
       </Box>
 
       {hasSearched ? (
-        <Box className="search-results">
-          <Box className="section-title-row">
+        <Box >
+          <Box >
             <Box>
-              <Text className="eyebrow">YOUR RESULTS</Text>
+              <Text >YOUR RESULTS</Text>
               <Title order={2}>
                 {searchResults.length
                   ? `${searchResults.length} related note${
@@ -74,13 +74,13 @@ export function SearchView() {
             </Box>
           </Box>
           {searchResults.length > 0 ? (
-            <Box className="notes-grid">
+            <Box >
               {searchResults.map((note) => (
                 <NoteCard key={note.id} note={note} />
               ))}
             </Box>
           ) : (
-            <Text className="muted">
+            <Text >
               Try another phrase, or save a note about this topic first.
             </Text>
           )}

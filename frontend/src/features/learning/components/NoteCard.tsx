@@ -15,32 +15,32 @@ export function NoteCard({ note: rawNote }: { note: Note | NoteEntity }) {
     rawNote instanceof NoteEntity ? rawNote : NoteEntity.fromRaw(rawNote);
 
   return (
-    <Paper className="note-card">
+    <Paper >
       <Anchor
         component={Link}
         href={`/notes/${encodeURIComponent(note.id)}`}
-        className="note-card-link"
+        
         aria-label={`Open note: ${note.displayTitle}`}
       />
-      <Box className="note-card-topline">
-        <Text component="span" className="topic-pill">
+      <Box >
+        <Text component="span" >
           {note.topicName}
         </Text>
-        <Text className="note-date">{note.formattedDate}</Text>
+        <Text >{note.formattedDate}</Text>
       </Box>
 
       <Title order={3}>{note.displayTitle}</Title>
-      <Text className="note-question">{note.question}</Text>
-      <Text className="note-excerpt">{note.explanation}</Text>
+      <Text >{note.question}</Text>
+      <Text >{note.explanation}</Text>
 
-      <Box className="note-card-bottom">
+      <Box >
         <Text>{note.takeawaysCount} key ideas</Text>
         {note.hasSourceUrl && note.sourceUrl ? (
           <Anchor
             href={note.sourceUrl}
             target="_blank"
             rel="noreferrer"
-            className="note-source-link"
+            
           >
             Open source <Icon name="arrow" size={14} />
           </Anchor>

@@ -3,7 +3,9 @@
 import {
   Box,
   Button,
+  Group,
   Select,
+  Stack,
   Switch,
   Text,
   TextInput,
@@ -46,9 +48,10 @@ export function StudyNoteForm({ onSuccess }: StudyNoteFormProps = {}) {
   };
 
   return (
-    <Box component="form" onSubmit={handleFormSubmit} className="capture-form">
+    <form onSubmit={handleFormSubmit}>
+      <Stack gap="md">
       {formError ? (
-        <Box className="error-banner" role="alert" mb="sm">
+        <Box role="alert" mb="sm">
           <Text>{formError}</Text>
         </Box>
       ) : null}
@@ -56,7 +59,6 @@ export function StudyNoteForm({ onSuccess }: StudyNoteFormProps = {}) {
       <TextInput
         id="question"
         label="What do you want to understand?"
-        classNames={{ label: "field-label" }}
         maxLength={500}
         required
         value={question}
@@ -69,12 +71,11 @@ export function StudyNoteForm({ onSuccess }: StudyNoteFormProps = {}) {
         label={
           <>
             Your notes or transcript{" "}
-            <Text component="span" className="optional-label">
+            <Text component="span" c="dimmed" size="xs">
               optional
             </Text>
           </>
         }
-        classNames={{ label: "field-label" }}
         maxLength={30000}
         rows={4}
         value={sourceText}
@@ -82,12 +83,11 @@ export function StudyNoteForm({ onSuccess }: StudyNoteFormProps = {}) {
         placeholder="Paste the useful excerpt, your rough notes, or a transcript…"
       />
 
-      <Box className="form-row">
-        <Box className="form-field grow">
+      <Group align="flex-start" grow>
+        <Box>
           <Select
             id="topic"
             label="Topic"
-            classNames={{ label: "field-label" }}
             data={topics.map((topic) => ({
               value: topic.id,
               label: topic.name,
@@ -99,36 +99,33 @@ export function StudyNoteForm({ onSuccess }: StudyNoteFormProps = {}) {
           />
         </Box>
 
-        <Box className="form-field grow">
+        <Box>
           <TextInput
             id="sourceUrl"
             type="url"
             label={
               <>
                 Source link{" "}
-                <Text component="span" className="optional-label">
+                <Text component="span" c="dimmed" size="xs">
                   optional
                 </Text>
               </>
             }
-            classNames={{ label: "field-label" }}
             value={sourceUrl}
             onChange={(event) => setSourceUrl(event.currentTarget.value)}
             placeholder="https://…"
           />
         </Box>
-      </Box>
+      </Group>
 
-      <Box className="form-footer">
+      <Group justify="space-between" align="center">
         <Switch
           id="saveToDeck"
           label="Generate quiz cards for review"
           checked={saveToDeck}
           onChange={(event) => setSaveToDeck(event.currentTarget.checked)}
-          color="indigo"
         />
         <Button
-          className="button button-primary"
           type="submit"
           disabled={isFormDisabled}
           loading={isSubmitting}
@@ -136,7 +133,8 @@ export function StudyNoteForm({ onSuccess }: StudyNoteFormProps = {}) {
         >
           {isSubmitting ? "Generating note…" : "Create study note"}
         </Button>
-      </Box>
-    </Box>
+      </Group>
+      </Stack>
+    </form>
   );
 }

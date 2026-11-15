@@ -3,10 +3,11 @@
 import {
   Box,
   Button,
+  Group,
   Paper,
+  Stack,
   Text,
   Title,
-  UnstyledButton,
 } from "@mantine/core";
 import Link from "next/link";
 import { Icon, type IconName } from "./Icon";
@@ -16,30 +17,31 @@ import { LearningViewSkeleton } from "@/src/components/feedback/LearningViewSkel
 function GradeButton({
   label,
   hint,
-  className,
   icon,
   disabled,
   onClick,
 }: {
   label: string;
   hint: string;
-  className: string;
   icon: IconName;
   disabled: boolean;
   onClick: () => void;
 }) {
   return (
-    <UnstyledButton
-      className={`grade-button ${className}`}
+    <Button
+      variant="default"
+      fullWidth
       disabled={disabled}
       onClick={onClick}
+      leftSection={<Icon name={icon} />}
     >
-      <Box className="grade-icon">
-        <Icon name={icon} />
-      </Box>
-      <Text component="strong">{label}</Text>
-      <Text component="small">{hint}</Text>
-    </UnstyledButton>
+      <Stack gap={0}>
+        <Text component="strong">{label}</Text>
+        <Text size="xs" c="dimmed">
+          {hint}
+        </Text>
+      </Stack>
+    </Button>
   );
 }
 
@@ -67,23 +69,23 @@ export function ReviewView() {
   }
 
   return (
-    <Box className="review-view">
-      <Box className="page-heading">
+    <Stack gap="md" maw={760} mx="auto">
+      <Box >
         <Box>
-          <Text className="eyebrow">SPACED REPETITION</Text>
+          <Text >SPACED REPETITION</Text>
           <Title>Time to remember</Title>
           <Text>
             Try to recall the answer before you reveal it. Every attempt is
             practice.
           </Text>
         </Box>
-        <Box className="review-total">
+        <Group gap="xs">
           <Icon name="cards" /> {remainingCount} remaining
-        </Box>
+        </Group>
       </Box>
 
       {sessionError ? (
-        <Box className="error-banner" role="alert" mb="md">
+        <Box  role="alert" mb="md">
           <Text>{sessionError}</Text>
           <Button variant="subtle" size="xs" onClick={clearError}>
             Dismiss
@@ -92,9 +94,9 @@ export function ReviewView() {
       ) : null}
 
       {currentCard ? (
-        <Paper component="article" className="quiz-card">
-          <Box className="quiz-meta">
-            <Text component="span" className="topic-pill">
+        <Paper component="article" >
+          <Box >
+            <Text component="span" >
               {currentCard.topicName}
             </Text>
             <Text>
@@ -102,16 +104,16 @@ export function ReviewView() {
             </Text>
           </Box>
 
-          <Box className="quiz-content">
-            <Text className="eyebrow">QUESTION</Text>
+          <Box >
+            <Text >QUESTION</Text>
             <Title order={2}>{currentCard.frontQuestion}</Title>
             {isRevealed ? (
-              <Box className="answer-block">
-                <Text className="eyebrow">ANSWER</Text>
+              <Box >
+                <Text >ANSWER</Text>
                 <Text>{currentCard.backAnswer}</Text>
               </Box>
             ) : (
-              <Text className="think-prompt">
+              <Text >
                 Take a breath and think it through before revealing.
               </Text>
             )}
@@ -119,18 +121,18 @@ export function ReviewView() {
 
           {!isRevealed ? (
             <Button
-              className="button button-primary reveal-button"
+              
               onClick={reveal}
               rightSection={<Icon name="arrow" size={16} />}
             >
               Reveal answer
             </Button>
           ) : (
-            <Box className="grade-actions">
+            <Group grow>
               <GradeButton
                 label="Forgot"
                 hint={currentCard.getIntervalDescription("forgot")}
-                className="forgot"
+                
                 icon="forgot"
                 disabled={isGrading}
                 onClick={() => gradeCurrentCard("forgot")}
@@ -138,7 +140,7 @@ export function ReviewView() {
               <GradeButton
                 label="Got it"
                 hint={currentCard.getIntervalDescription("got_it")}
-                className="got-it"
+                
                 icon="check"
                 disabled={isGrading}
                 onClick={() => gradeCurrentCard("got_it")}
@@ -146,15 +148,15 @@ export function ReviewView() {
               <GradeButton
                 label="Too easy"
                 hint={currentCard.getIntervalDescription("too_easy")}
-                className="too-easy"
+                
                 icon="easy"
                 disabled={isGrading}
                 onClick={() => gradeCurrentCard("too_easy")}
               />
-            </Box>
+            </Group>
           )}
 
-          <Box className="quiz-card-footer">
+          <Box >
             <Text>
               From note:{" "}
               <Text component="strong">{currentCard.noteTitle}</Text>
@@ -166,8 +168,8 @@ export function ReviewView() {
           </Box>
         </Paper>
       ) : (
-        <Paper className="empty-panel">
-          <Box className="empty-icon-wrap">
+        <Paper >
+          <Box >
             <Icon name="check" size={28} />
           </Box>
           <Title order={3}>All caught up for today.</Title>
@@ -178,13 +180,13 @@ export function ReviewView() {
           <Button
             component={Link}
             href="/"
-            className="button button-primary"
+            
           >
             Back to overview
           </Button>
         </Paper>
       )}
-    </Box>
+    </Stack>
   );
 }
 

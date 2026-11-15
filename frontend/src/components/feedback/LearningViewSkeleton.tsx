@@ -15,9 +15,9 @@ export function LearningViewSkeleton({ view }: LearningViewSkeletonProps) {
   const heading = headingWidths[view];
 
   return (
-    <Box className={`${view}-view`} aria-busy="true">
-      <Box className="page-heading">
-        <Box style={{ flex: 1 }}>
+    <Box  aria-busy="true">
+      <Box >
+        <Box flex={1}>
           <Skeleton height={10} width={heading.eyebrow} radius="xs" mb="xs" />
           <Skeleton height={28} width={heading.title} radius="md" mb="xs" />
           <Skeleton
@@ -33,9 +33,9 @@ export function LearningViewSkeleton({ view }: LearningViewSkeletonProps) {
 
       {view === "overview" ? (
         <>
-          <Box className="stats-grid">
+          <Box >
             {[1, 2, 3].map((item) => (
-              <Paper key={item} className="stat-card">
+              <Paper key={item} >
                 <Skeleton height={38} width={38} radius="md" mb="xs" />
                 <Skeleton height={12} width={80} radius="sm" mb="xs" />
                 <Skeleton height={26} width={40} radius="sm" mb="xs" />
@@ -43,14 +43,14 @@ export function LearningViewSkeleton({ view }: LearningViewSkeletonProps) {
               </Paper>
             ))}
           </Box>
-          <Box className="dashboard-columns">
-            <Paper className="panel capture-panel">
+          <Box >
+            <Paper >
               <Skeleton height={20} width={160} radius="sm" mb="md" />
               <Skeleton height={42} width="100%" radius="md" mb="md" />
               <Skeleton height={80} width="100%" radius="md" mb="md" />
               <Skeleton height={38} width="100%" radius="md" />
             </Paper>
-            <Paper className="panel review-panel">
+            <Paper >
               <Skeleton height={20} width={140} radius="sm" mb="md" />
               <Skeleton height={24} width={180} radius="sm" mb="sm" />
               <Skeleton height={14} width="80%" radius="sm" mb="lg" />
@@ -61,9 +61,9 @@ export function LearningViewSkeleton({ view }: LearningViewSkeletonProps) {
       ) : null}
 
       {view === "library" ? (
-        <Box className="notes-grid library-grid">
+        <Box >
           {[1, 2, 3, 4, 5, 6].map((item) => (
-            <Box key={item} className="note-card" style={{ minHeight: 200 }}>
+            <Box key={item} mih={200}>
               <Skeleton height={18} width={80} radius="sm" mb="sm" />
               <Skeleton height={22} width="85%" radius="sm" mb="xs" />
               <Skeleton height={14} width="100%" radius="xs" mb="xs" />
@@ -75,7 +75,7 @@ export function LearningViewSkeleton({ view }: LearningViewSkeletonProps) {
       ) : null}
 
       {view === "review" ? (
-        <Paper className="quiz-card" style={{ minHeight: 260 }}>
+        <Paper mih={260}>
           <Skeleton height={20} width={100} radius="sm" mb="md" />
           <Skeleton height={28} width="70%" radius="sm" mb="xl" />
           <Skeleton height={42} width={180} radius="md" mx="auto" />

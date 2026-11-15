@@ -47,36 +47,36 @@ export function NoteChat({
   };
 
   return (
-    <Box className="note-chat">
-      <Box className="note-chat-messages" aria-live="polite">
+    <Box >
+      <Box  aria-live="polite">
         {messages.map((item, index) => (
           <Box
-            className={`note-chat-message ${item.role}`}
+            
             key={`${index}-${item.role}`}
           >
-            <Text className="note-chat-role">
+            <Text >
               {item.role === "assistant" ? "Study assistant" : "You"}
             </Text>
             <Text>{item.content}</Text>
             {item.role === "assistant" &&
             index === messages.length - 1 &&
             chatMutation.data?.updated ? (
-              <Text className="note-chat-update">Note updated</Text>
+              <Text >Note updated</Text>
             ) : null}
           </Box>
         ))}
         {chatMutation.isPending ? (
-          <Text className="note-chat-thinking" role="status">
+          <Text  role="status">
             Thinking about this note…
           </Text>
         ) : null}
       </Box>
       {error ? (
-        <Text className="error-banner" role="alert">
+        <Text  role="alert">
           {error}
         </Text>
       ) : null}
-      <Box component="form" className="note-chat-form" onSubmit={handleSubmit}>
+      <Box component="form"  onSubmit={handleSubmit}>
         <Textarea
           aria-label="Ask a follow-up question about this note"
           value={message}
@@ -89,7 +89,7 @@ export function NoteChat({
         />
         <Button
           type="submit"
-          className="button button-primary"
+          
           aria-label="Send follow-up question"
           disabled={!message.trim() || chatMutation.isPending}
           loading={chatMutation.isPending}

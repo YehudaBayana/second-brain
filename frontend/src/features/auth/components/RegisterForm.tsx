@@ -26,13 +26,7 @@ export function RegisterForm() {
   } = useCredentialsForm("register");
 
   return (
-    <Card
-      withBorder
-      shadow="sm"
-      p="xl"
-      radius="md"
-      style={{ width: 420, maxWidth: "100%" }}
-    >
+    <Card w={420} maw="100%">
       <Stack gap="lg">
         <Stack gap="xs">
           <Title order={2}>Create Account</Title>
@@ -42,7 +36,7 @@ export function RegisterForm() {
         </Stack>
 
         {registerError ? (
-          <Box className="error-banner" role="alert" p="xs">
+          <Box  role="alert" p="xs">
             <Text size="sm">
               {registerError instanceof Error
                 ? registerError.message
@@ -82,7 +76,7 @@ export function RegisterForm() {
               fullWidth
               loading={isSubmitting}
               mt="sm"
-              className="button button-primary"
+              
             >
               Create Account
             </Button>

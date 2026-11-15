@@ -20,10 +20,10 @@ export function LibraryView() {
   }
 
   return (
-    <Box className="library-view">
-      <Box className="page-heading">
+    <Box >
+      <Box >
         <Box>
-          <Text className="eyebrow">YOUR PERSONAL KNOWLEDGE BASE</Text>
+          <Text >YOUR PERSONAL KNOWLEDGE BASE</Text>
           <Title>My library</Title>
           <Text>
             {stats.notes} notes across {topics.length} topics. Keep the ideas
@@ -33,7 +33,7 @@ export function LibraryView() {
         <Button
           component={Link}
           href="/"
-          className="button button-primary"
+          
           leftSection={<Icon name="plus" size={16} />}
         >
           Add a note
@@ -41,14 +41,14 @@ export function LibraryView() {
       </Box>
 
       {notes.length > 0 ? (
-        <Box className="notes-grid library-grid">
+        <Box >
           {notes.map((note) => (
             <NoteCard key={note.id} note={note} />
           ))}
         </Box>
       ) : (
-        <Paper className="empty-panel">
-          <ThemeIcon className="empty-icon" variant="light">
+        <Paper >
+          <ThemeIcon  variant="light">
             <Icon name="book" size={22} />
           </ThemeIcon>
           <Title order={3}>Your library is ready for its first idea.</Title>
@@ -56,7 +56,7 @@ export function LibraryView() {
           <Button
             component={Link}
             href="/"
-            className="button button-primary"
+            
           >
             Create your first note
           </Button>

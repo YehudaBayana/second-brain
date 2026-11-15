@@ -15,20 +15,20 @@ export function ReviewPrompt({ dueToday, onSaveIdea }: ReviewPromptProps) {
   };
 
   return (
-    <Paper className="panel review-panel">
-      <Box className="panel-heading">
+    <Paper >
+      <Box >
         <Box>
-          <Text className="eyebrow">A LITTLE PRACTICE</Text>
+          <Text >A LITTLE PRACTICE</Text>
           <Title order={2}>Make it memorable</Title>
         </Box>
-        <ThemeIcon className="heading-icon warm" variant="light">
+        <ThemeIcon  variant="light">
           <Icon name="cards" />
         </ThemeIcon>
       </Box>
 
-      <Box className="review-illustration">
+      <Box >
         <Icon name="clock" size={26} />
-        <Box className="orbit-dot" />
+        <Box  />
       </Box>
 
       {dueToday > 0 ? (
@@ -43,7 +43,7 @@ export function ReviewPrompt({ dueToday, onSaveIdea }: ReviewPromptProps) {
           <Button
             component={Link}
             href="/review"
-            className="button button-primary full-button"
+            
             rightSection={<Icon name="arrow" size={16} />}
           >
             Start a review
@@ -57,7 +57,7 @@ export function ReviewPrompt({ dueToday, onSaveIdea }: ReviewPromptProps) {
             time to revisit them.
           </Text>
           <Button
-            className="button button-outline full-button"
+            
             variant="default"
             onClick={handleSaveIdea}
             rightSection={<Icon name="arrow" size={16} />}
@@ -67,7 +67,7 @@ export function ReviewPrompt({ dueToday, onSaveIdea }: ReviewPromptProps) {
         </>
       )}
 
-      <Box className="review-note">
+      <Box >
         <Icon name="sparkle" size={15} />
         <Text component="span">
           Consistency matters more than long sessions.

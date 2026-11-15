@@ -7,6 +7,7 @@ import {
   Burger,
   Button,
   Group,
+  Stack,
   Text,
   useAppShellResize,
 } from "@mantine/core";
@@ -91,7 +92,7 @@ export function AppShellLayout({
 
   return (
     <AppShell
-      className={assistantOpened ? "assistant-open" : ""}
+      
       header={{ height: 60 }}
       navbar={{
         width: 300,
@@ -101,7 +102,7 @@ export function AppShellLayout({
       padding="md"
       resize={resize}
     >
-      <AppShell.Header className="topbar app-shell-header">
+      <AppShell.Header >
         <Group h="100%" px="md" justify="space-between">
           <Group h="100%" gap="md">
             <Burger
@@ -111,14 +112,14 @@ export function AppShellLayout({
               size="sm"
               aria-label={opened ? "Close navigation" : "Open navigation"}
             />
-            <Text className="breadcrumbs">
+            <Text >
               Your workspace <Text component="span">/</Text>{" "}
               <Text component="strong">{currentLabel}</Text>
             </Text>
           </Group>
           <Group gap="md">
             {currentDate ? (
-              <Text className="topbar-date">
+              <Text >
                 {new Intl.DateTimeFormat("en", {
                   weekday: "long",
                   month: "long",
@@ -131,7 +132,7 @@ export function AppShellLayout({
               onClick={resize.resetAll}
               variant="default"
               size="xs"
-              className="reset-layout-button"
+              
             >
               Reset layout
             </Button>
@@ -139,7 +140,7 @@ export function AppShellLayout({
               onClick={assistantDisclosure.toggle}
               variant="default"
               size="xs"
-              className="assistant-toggle"
+              
               aria-expanded={assistantOpened}
               aria-controls="study-assistant-panel"
               leftSection={<Icon name="sparkle" size={14} />}
@@ -150,27 +151,27 @@ export function AppShellLayout({
         </Group>
       </AppShell.Header>
 
-      <AppShell.Navbar className="sidebar" p="md">
+      <AppShell.Navbar  p="md">
         <Anchor
           component={Link}
-          className="brand"
+          
           href="/"
           aria-label="Second Brain home"
         >
-          <Box className="brand-mark">
+          <Box >
             <Icon name="book" size={21} />
           </Box>
           <Text component="span">
             second
-            <Text component="span" className="brand-light">
+            <Text component="span" >
               brain
             </Text>
           </Text>
         </Anchor>
 
-        <Text className="nav-caption">YOUR WORKSPACE</Text>
+        <Text >YOUR WORKSPACE</Text>
 
-        <Box component="nav" className="main-nav" aria-label="Main navigation">
+        <Stack component="nav" gap="xs" aria-label="Main navigation">
           {navItems.map(({ href, label, icon, badgeKey }) => {
             const active = isActive(href);
             return (
@@ -178,25 +179,27 @@ export function AppShellLayout({
                 component={Link}
                 key={href}
                 href={href}
-                className={`nav-item ${active ? "active" : ""}`}
+                
                 aria-current={active ? "page" : undefined}
                 aria-label={label}
               >
                 <Icon name={icon} />
-                <Text component="span">{label}</Text>
+                <Text component="span" c={active ? "blue" : undefined}>
+                  {label}
+                </Text>
                 {badgeKey === "dueToday" && dueToday > 0 ? (
-                  <Text component="span" className="nav-count">
+                  <Text component="span" >
                     {dueToday}
                   </Text>
                 ) : null}
               </Anchor>
             );
           })}
-        </Box>
+        </Stack>
 
-        <Box className="sidebar-bottom">
-          <Box className="sidebar-tip">
-            <Box className="tip-icon">
+        <Box >
+          <Box >
+            <Box >
               <Icon name="sparkle" size={17} />
             </Box>
             <Text component="strong">Little by little</Text>
@@ -205,15 +208,15 @@ export function AppShellLayout({
             </Text>
           </Box>
 
-          <Box className="account-row">
-            <Text component="span" className="avatar">
+          <Box >
+            <Text component="span" >
               {email.slice(0, 1).toUpperCase()}
             </Text>
-            <Text component="span" className="account-email" title={email}>
+            <Text component="span"  title={email}>
               {email}
             </Text>
             <Button
-              className="icon-button logout-button"
+              
               onClick={() => logout()}
               aria-label="Sign out"
               title="Sign out"
@@ -226,14 +229,14 @@ export function AppShellLayout({
         </Box>
       </AppShell.Navbar>
 
-      <AppShell.Main className="main-panel">
-        <Box className="content-wrap app-shell-content-wrap">
+      <AppShell.Main >
+        <Box >
           <StudyAssistantProvider value={assistantDisclosure.open}>
             {children}
           </StudyAssistantProvider>
         </Box>
 
-        <Box component="footer" className="app-footer app-shell-footer">
+        <Box component="footer" >
           <Text component="span">Keep learning, one idea at a time.</Text>
           <Text component="span">Second Brain</Text>
         </Box>

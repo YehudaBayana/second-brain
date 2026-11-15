@@ -8,26 +8,26 @@ import { Icon } from "@/src/features/learning/components/Icon";
  */
 export function AppShellSkeleton() {
   return (
-    <Box className="app-shell" aria-busy="true" aria-label="Loading workspace">
+    <Box  aria-busy="true" aria-label="Loading workspace">
       {/* Sidebar Skeleton */}
-      <Box component="aside" className="sidebar">
-        <Box className="brand">
-          <Box className="brand-mark">
+      <Box component="aside" >
+        <Box >
+          <Box >
             <Icon name="book" size={21} />
           </Box>
-          <Box style={{ width: 90, height: 18 }}>
+          <Box w={90} h={18}>
             <Skeleton height={18} width="100%" radius="sm" />
           </Box>
         </Box>
 
         <Skeleton height={10} width={90} radius="xs" mb="sm" />
 
-        <Box component="nav" className="main-nav">
+        <Box component="nav" >
           {[1, 2, 3, 4].map((item) => (
             <Box
               key={item}
-              className="nav-item"
-              style={{ pointerEvents: "none", opacity: 0.7 }}
+              
+              aria-hidden="true"
             >
               <Skeleton height={18} width={18} circle />
               <Skeleton height={14} width="60%" radius="sm" />
@@ -35,14 +35,14 @@ export function AppShellSkeleton() {
           ))}
         </Box>
 
-        <Box className="sidebar-bottom">
-          <Box className="sidebar-tip">
+        <Box >
+          <Box >
             <Skeleton height={12} width="50%" radius="sm" mb="xs" />
             <Skeleton height={10} width="90%" radius="xs" mb={4} />
             <Skeleton height={10} width="75%" radius="xs" />
           </Box>
 
-          <Box className="account-row">
+          <Box >
             <Skeleton height={28} width={28} circle />
             <Skeleton height={14} width={120} radius="sm" />
           </Box>
@@ -50,16 +50,16 @@ export function AppShellSkeleton() {
       </Box>
 
       {/* Main Panel Skeleton */}
-      <Box component="main" className="main-panel">
-        <Box component="header" className="topbar">
+      <Box component="main" >
+        <Box component="header" >
           <Skeleton height={14} width={160} radius="sm" />
           <Skeleton height={14} width={120} radius="sm" />
         </Box>
 
-        <Box className="content-wrap">
+        <Box >
           {/* Page Heading Skeleton */}
-          <Box className="page-heading">
-            <Box style={{ flex: 1 }}>
+          <Box >
+            <Box flex={1}>
               <Skeleton height={10} width={140} radius="xs" mb="xs" />
               <Skeleton height={28} width={280} radius="md" mb="xs" />
               <Skeleton height={14} width={340} radius="sm" />
@@ -68,9 +68,9 @@ export function AppShellSkeleton() {
           </Box>
 
           {/* Stats Grid Skeleton */}
-          <Box className="stats-grid">
+          <Box >
             {[1, 2, 3].map((card) => (
-              <Paper key={card} className="stat-card">
+              <Paper key={card} >
                 <Skeleton height={38} width={38} radius="md" mb="xs" />
                 <Skeleton height={12} width={80} radius="sm" mb="xs" />
                 <Skeleton height={26} width={40} radius="sm" mb="xs" />
@@ -80,15 +80,15 @@ export function AppShellSkeleton() {
           </Box>
 
           {/* Dashboard Columns Skeleton */}
-          <Box className="dashboard-columns">
-            <Paper className="panel capture-panel">
+          <Box >
+            <Paper >
               <Skeleton height={20} width={160} radius="sm" mb="md" />
               <Skeleton height={42} width="100%" radius="md" mb="md" />
               <Skeleton height={80} width="100%" radius="md" mb="md" />
               <Skeleton height={38} width="100%" radius="md" />
             </Paper>
 
-            <Paper className="panel review-panel">
+            <Paper >
               <Skeleton height={20} width={140} radius="sm" mb="md" />
               <Skeleton height={24} width={180} radius="sm" mb="sm" />
               <Skeleton height={14} width="80%" radius="sm" mb="lg" />
@@ -97,7 +97,7 @@ export function AppShellSkeleton() {
           </Box>
         </Box>
 
-        <Box component="footer" className="app-footer">
+        <Box component="footer" >
           <Skeleton height={12} width={180} radius="xs" />
           <Skeleton height={12} width={80} radius="xs" />
         </Box>

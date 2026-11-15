@@ -1,6 +1,13 @@
 "use client";
 
-import { Anchor, Box, Button, Group, Paper, Text, Title } from "@mantine/core";
+import {
+  Anchor,
+  Button,
+  Drawer,
+  Group,
+  Stack,
+  Text,
+} from "@mantine/core";
 import Link from "next/link";
 import { useState } from "react";
 import { useStudyNoteForm } from "../hooks/useStudyNoteForm";
@@ -30,42 +37,28 @@ export function StudyAssistantPanel({
       : (createdNote?.note ?? null);
 
   return (
-    <Paper
+    <Drawer
       id={id}
-      className={`study-assistant-panel ${opened ? "opened" : ""}`}
-      aria-hidden={!opened}
-      inert={!opened}
+      opened={opened}
+      onClose={onClose}
+      position="right"
+      size="md"
+      title={createdNote ? "Continue learning" : "Save something new"}
     >
-      <Box className="study-assistant-heading">
-        <Box>
-          <Text className="eyebrow">YOUR STUDY ASSISTANT</Text>
-          <Title order={2}>
-            {createdNote ? "Continue learning" : "Save something new"}
-          </Title>
-        </Box>
-        <Group gap={5}>
-          {createdNote ? (
-            <Button
-              variant="subtle"
-              size="xs"
-              onClick={dismissCreatedNote}
-              leftSection={<Icon name="plus" size={14} />}
-            >
-              New note
-            </Button>
-          ) : null}
+      {createdNote ? (
+        <Group justify="flex-end" mb="md">
           <Button
-            variant="subtle"
-            className="icon-button assistant-close"
-            aria-label="Close study assistant"
-            onClick={onClose}
+            variant="default"
+            size="xs"
+            onClick={dismissCreatedNote}
+            leftSection={<Icon name="plus" size={14} />}
           >
-            <Icon name="close" />
+            New note
           </Button>
         </Group>
-      </Box>
+      ) : null}
 
-      <Box className="study-assistant-body">
+      <Stack gap="md">
         {createdNote && currentNote ? (
           <>
             <CreatedNotePanel
@@ -74,13 +67,12 @@ export function StudyAssistantPanel({
             <Anchor
               component={Link}
               href={`/notes/${encodeURIComponent(currentNote.id)}`}
-              className="assistant-note-link"
             >
               Open full note
               <Icon name="arrow" size={14} />
             </Anchor>
-            <Box className="assistant-chat-section">
-              <Text className="assistant-chat-heading">
+            <Stack gap="sm">
+              <Text>
                 Ask a follow-up about “{currentNote.title}”
               </Text>
               <NoteChat
@@ -90,18 +82,18 @@ export function StudyAssistantPanel({
                   setNoteOverride({ id: currentNote.id, note })
                 }
               />
-            </Box>
+            </Stack>
           </>
         ) : (
-          <Box className="assistant-create-section">
-            <Text className="assistant-intro">
+          <>
+            <Text>
               Ask about anything you’re learning. I’ll create a study note you
               can keep refining with follow-up questions.
             </Text>
             <StudyNoteForm />
-          </Box>
+          </>
         )}
-      </Box>
-    </Paper>
+      </Stack>
+    </Drawer>
   );
 }

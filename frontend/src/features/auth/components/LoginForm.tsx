@@ -26,13 +26,7 @@ export function LoginForm() {
   } = useCredentialsForm("login");
 
   return (
-    <Card
-      withBorder
-      shadow="sm"
-      p="xl"
-      radius="md"
-      style={{ width: 420, maxWidth: "100%" }}
-    >
+    <Card w={420} maw="100%">
       <Stack gap="lg">
         <Stack gap="xs">
           <Title order={2}>Welcome Back</Title>
@@ -42,7 +36,7 @@ export function LoginForm() {
         </Stack>
 
         {loginError ? (
-          <Box className="error-banner" role="alert" p="xs">
+          <Box  role="alert" p="xs">
             <Text size="sm">
               {loginError instanceof Error
                 ? loginError.message
@@ -82,7 +76,7 @@ export function LoginForm() {
               fullWidth
               loading={isSubmitting}
               mt="sm"
-              className="button button-primary"
+              
             >
               Sign In
             </Button>

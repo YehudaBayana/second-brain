@@ -11,23 +11,21 @@ import { LearningViewSkeleton } from "@/src/components/feedback/LearningViewSkel
 
 function StatCard({
   icon,
-  color,
   label,
   value,
   description,
 }: {
   icon: "book" | "cards" | "clock";
-  color: "violet" | "orange" | "green";
   label: string;
   value: number;
   description: string;
 }) {
   return (
-    <Paper className="stat-card">
-      <ThemeIcon className={`stat-icon ${color}`} variant="light">
+    <Paper >
+      <ThemeIcon  variant="light">
         <Icon name={icon} />
       </ThemeIcon>
-      <Text className="stat-label">{label}</Text>
+      <Text >{label}</Text>
       <Text component="strong">{value}</Text>
       <Text component="small">{description}</Text>
     </Paper>
@@ -47,10 +45,10 @@ export function OverviewView() {
   }
 
   return (
-    <Box className="overview-view">
-      <Box className="page-heading">
+    <Box >
+      <Box >
         <Box>
-          <Text className="eyebrow">YOUR KNOWLEDGE, IN ONE PLACE</Text>
+          <Text >YOUR KNOWLEDGE, IN ONE PLACE</Text>
           <Title>Good to see you, {greetingName}.</Title>
           <Text>
             Keep following your curiosity. We’ll help the good ideas stick.
@@ -59,7 +57,7 @@ export function OverviewView() {
         <Button
           component={Link}
           href="/library"
-          className="button button-outline"
+          
           variant="default"
           leftSection={<Icon name="library" size={16} />}
         >
@@ -68,24 +66,21 @@ export function OverviewView() {
       </Box>
 
       {/* Stats Grid */}
-      <Box className="stats-grid" aria-label="Learning overview">
+      <Box  aria-label="Learning overview">
         <StatCard
           icon="book"
-          color="violet"
           label="Saved notes"
           value={stats.notes}
           description="Ideas worth keeping"
         />
         <StatCard
           icon="cards"
-          color="orange"
           label="Quiz cards"
           value={stats.cards}
           description="Built from your notes"
         />
         <StatCard
           icon="clock"
-          color="green"
           label="Due to review"
           value={stats.dueToday}
           description={
@@ -95,7 +90,7 @@ export function OverviewView() {
       </Box>
 
       {/* Review actions */}
-      <Box className="dashboard-columns">
+      <Box >
         <ReviewPrompt
           dueToday={stats.dueToday}
           onSaveIdea={openStudyAssistant}
@@ -104,10 +99,10 @@ export function OverviewView() {
 
       {/* Recent Notes Section */}
       {notes.length > 0 ? (
-        <Box className="recent-notes-section" mt="xl">
-          <Box className="section-title-row">
+        <Box  mt="xl">
+          <Box >
             <Box>
-              <Text className="eyebrow">RECENTLY ADDED</Text>
+              <Text >RECENTLY ADDED</Text>
               <Title order={2}>Fresh in your mind</Title>
             </Box>
             <Button
@@ -119,7 +114,7 @@ export function OverviewView() {
               View all {notes.length} notes
             </Button>
           </Box>
-          <Box className="notes-grid">
+          <Box >
             {notes.slice(0, 3).map((note) => (
               <NoteCard key={note.id} note={note} />
             ))}
