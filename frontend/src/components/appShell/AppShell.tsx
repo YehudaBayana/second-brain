@@ -10,12 +10,14 @@ import {
   Stack,
   Divider,
 } from "@mantine/core";
-import { ColorSchemeToggle } from "../ColorSchemeToggle/ColorSchemeToggle";
 import { useDisclosure } from "@mantine/hooks";
 import Link from "next/link";
 import { FiFolder, FiLogOut, FiTrash2 } from "react-icons/fi";
-import { useGetCurrentUser, useLogout } from "@/features/auth/query/useAuth";
 import { useRouter } from "next/navigation";
+import {
+  useGetCurrentUser,
+  useLogout,
+} from "@/src/features/auth/query/useAuth";
 
 export function ResizableAppShell({ children }: { children: React.ReactNode }) {
   const [opened, { toggle }] = useDisclosure();
@@ -46,10 +48,14 @@ export function ResizableAppShell({ children }: { children: React.ReactNode }) {
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
           <Group h="100%">
-            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+            <Burger
+              opened={opened}
+              onClick={toggle}
+              hiddenFrom="sm"
+              size="sm"
+            />
             <Text size="sm">Storit</Text>
           </Group>
-          <ColorSchemeToggle />
           <Button onClick={resize.resetAll} variant="default" size="xs">
             Reset layout
           </Button>

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Box, Button, Flex, Text } from "@mantine/core";
-import { useGetCurrentUser } from "@/features/auth/query/useAuth";
+import { useGetCurrentUser } from "../../query/useAuth";
 
 interface RequireAuthProps {
   children: React.ReactNode;

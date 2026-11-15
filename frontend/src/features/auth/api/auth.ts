@@ -1,6 +1,6 @@
-import { apiClient } from "@/api/apiClient";
-import { LoginApiResponse, getCurrentResponse } from "@/types/global.types";
+import { getCurrentResponse, LoginApiResponse } from "@/src/services/auth";
 import { getCookie } from "../utils";
+import { apiClient } from "@/src/services/apiClient";
 
 export function login(email: string, password: string) {
   return apiClient<LoginApiResponse>("/api/auth/login", {

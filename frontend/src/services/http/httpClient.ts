@@ -1,4 +1,3 @@
-import { clientApiUrl, serverApiUrl } from "@/config/constants";
 import { ApiError } from "./ApiError";
 import { getCsrfToken } from "./csrf";
 
@@ -7,11 +6,13 @@ export interface RequestOptions extends RequestInit {
   skipCsrf?: boolean;
 }
 
-export async function httpClient<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+export async function httpClient<T>(
+  endpoint: string,
+  options: RequestOptions = {},
+): Promise<T> {
   const { params, headers, skipCsrf, ...customConfig } = options;
 
-  const isServer = typeof window === "undefined";
-  const baseUrl = isServer ? serverApiUrl : clientApiUrl || window.location.origin;
+  const baseUrl = "http://localhost:8080";
 
   const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
   const url =
@@ -27,7 +28,8 @@ export async function httpClient<T>(endpoint: string, options: RequestOptions = 
     });
   }
 
-  const method = customConfig.method?.toUpperCase() || (customConfig.body ? "POST" : "GET");
+  const method =
+    customConfig.method?.toUpperCase() || (customConfig.body ? "POST" : "GET");
   const isMutating = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
 
   const reqHeaders: HeadersInit = {
@@ -60,7 +62,8 @@ export async function httpClient<T>(endpoint: string, options: RequestOptions = 
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => null);
-    const message = errorData?.message || `HTTP error! status: ${response.status}`;
+    const message =
+      errorData?.message || `HTTP error! status: ${response.status}`;
     throw new ApiError(response.status, message, errorData?.code, errorData);
   }
 

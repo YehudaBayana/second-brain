@@ -1,6 +1,7 @@
 import { ResizableAppShell } from "@/src/components/appShell/AppShell";
 import { getSession } from "@/src/services/auth";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 // Import your auth verification helper (e.g., from Supabase, NextAuth, Firebase, etc.)
 
 export default async function ProtectedLayout({
@@ -15,5 +16,9 @@ export default async function ProtectedLayout({
     redirect("/auth");
   }
 
-  return <ResizableAppShell>{children}</ResizableAppShell>;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ResizableAppShell>{children}</ResizableAppShell>
+    </Suspense>
+  );
 }
