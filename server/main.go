@@ -12,7 +12,6 @@ import (
 
 	"github.com/YehudaBayana/second-brain/server/auth"
 	"github.com/YehudaBayana/second-brain/server/dbmigrate"
-	"github.com/YehudaBayana/second-brain/server/job"
 	"github.com/YehudaBayana/second-brain/server/learning"
 	"github.com/YehudaBayana/second-brain/server/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -80,7 +79,6 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	job.RegisterRoutes(mux, redisClient)
 	authHandler.RegisterRoutes(mux, protected, protectedWrite)
 	dbmigrate.NewHandler(db).RegisterRoutes(mux, protectedWrite)
 	learningAPI.RegisterRoutes(mux, protected, protectedWrite)
