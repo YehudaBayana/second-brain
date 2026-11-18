@@ -9,7 +9,6 @@ import {
   Button,
   Group,
   NavLink,
-  Paper,
   Stack,
   Text,
   useAppShellResize,
@@ -23,6 +22,7 @@ import { StudyAssistantPanel } from "@/src/features/learning/components/StudyAss
 import { StudyAssistantProvider } from "@/src/features/learning/components/StudyAssistantContext";
 import { useLearningStats } from "@/src/features/learning/query/useLearning";
 import { useAuth } from "@/src/features/auth/hooks/useAuth";
+import { RunMigrationsButton } from "@/src/features/database/components/RunMigrationsButton";
 
 interface NavItem {
   href: string;
@@ -133,11 +133,8 @@ export function AppShellLayout({
                 }).format(new Date(currentDate))}
               </Text>
             ) : null}
-            <Button
-              onClick={resize.resetAll}
-              variant="default"
-              size="xs"
-            >
+            <RunMigrationsButton />
+            <Button onClick={resize.resetAll} variant="default" size="xs">
               Reset layout
             </Button>
             <Button
@@ -167,7 +164,10 @@ export function AppShellLayout({
                 <Icon name="book" size={20} />
               </Avatar>
               <Text fw={700} size="lg" c="dark">
-                second<Text component="span" c="indigo.7">brain</Text>
+                second
+                <Text component="span" c="indigo.7">
+                  brain
+                </Text>
               </Text>
             </Group>
           </Anchor>
@@ -200,20 +200,6 @@ export function AppShellLayout({
           </Stack>
 
           <Stack mt="auto" gap="md">
-            <Paper p="md" bg="indigo.0" radius="md">
-              <Group gap="sm" align="flex-start">
-                <Avatar color="indigo" variant="light" radius="md" size="sm">
-                  <Icon name="sparkle" size={16} />
-                </Avatar>
-                <Stack gap={4} flex={1}>
-                  <Text size="sm" fw={600}>Little by little</Text>
-                  <Text size="xs" c="dimmed">
-                    Ten focused minutes today beats an hour of cramming later.
-                  </Text>
-                </Stack>
-              </Group>
-            </Paper>
-
             <Group gap="sm" wrap="nowrap">
               <Avatar color="indigo" radius="xl" size="sm">
                 {email.slice(0, 1).toUpperCase()}
