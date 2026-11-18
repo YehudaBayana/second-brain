@@ -30,12 +30,12 @@ const (
 var reviewIntervals = [...]int{1, 3, 7, 14, 30}
 
 type API struct {
-	db *pgxpool.Pool
-	ai *genai.Client
+	repository *Repository
+	ai         *genai.Client
 }
 
 func NewAPI(db *pgxpool.Pool, ai *genai.Client) *API {
-	return &API{db: db, ai: ai}
+	return &API{repository: NewRepository(db), ai: ai}
 }
 
 type topic struct {
@@ -119,31 +119,9 @@ func (api *API) HandleTopics(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		if err := api.ensureDefaultTopics(r.Context(), userID); err != nil {
-			log.Printf("Create default topics: %v", err)
-			writeLearningError(w, http.StatusInternalServerError, "could not load topics")
-			return
-		}
-		rows, err := api.db.Query(r.Context(),
-			`SELECT id, name FROM topics WHERE user_id = $1 ORDER BY name`, userID)
+		topics, err := api.repository.ListTopics(r.Context(), userID)
 		if err != nil {
 			log.Printf("Load topics: %v", err)
-			writeLearningError(w, http.StatusInternalServerError, "could not load topics")
-			return
-		}
-		defer rows.Close()
-		topics := make([]topic, 0)
-		for rows.Next() {
-			var item topic
-			if err := rows.Scan(&item.ID, &item.Name); err != nil {
-				log.Printf("Read topic: %v", err)
-				writeLearningError(w, http.StatusInternalServerError, "could not load topics")
-				return
-			}
-			topics = append(topics, item)
-		}
-		if err := rows.Err(); err != nil {
-			log.Printf("Iterate topics: %v", err)
 			writeLearningError(w, http.StatusInternalServerError, "could not load topics")
 			return
 		}
@@ -160,11 +138,7 @@ func (api *API) HandleTopics(w http.ResponseWriter, r *http.Request) {
 			writeLearningError(w, http.StatusUnprocessableEntity, "topic name must be between 1 and 60 characters")
 			return
 		}
-		var item topic
-		err := api.db.QueryRow(r.Context(),
-			`INSERT INTO topics (user_id, name) VALUES ($1, $2) RETURNING id, name`,
-			userID, name,
-		).Scan(&item.ID, &item.Name)
+		item, err := api.repository.CreateTopic(r.Context(), userID, name)
 		if err != nil {
 			if isTopicConflict(err) {
 				writeLearningError(w, http.StatusConflict, "you already have a topic with that name")
@@ -189,44 +163,9 @@ func (api *API) HandleNotes(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		rows, err := api.db.Query(r.Context(), `
-			SELECT n.id, n.topic_id, t.name, n.title, n.question_asked, n.source_text,
-			       n.ai_explanation, n.key_takeaways, n.code_examples, n.source_url, n.created_at
-			FROM notes n
-			JOIN topics t ON t.id = n.topic_id
-			WHERE n.user_id = $1
-			ORDER BY n.created_at DESC
-			LIMIT 100`, userID)
+		notes, err := api.repository.ListNotes(r.Context(), userID)
 		if err != nil {
 			log.Printf("Load notes: %v", err)
-			writeLearningError(w, http.StatusInternalServerError, "could not load notes")
-			return
-		}
-		defer rows.Close()
-		notes := make([]note, 0)
-		for rows.Next() {
-			var item note
-			var takeaways, examples []byte
-			if err := rows.Scan(&item.ID, &item.TopicID, &item.TopicName, &item.Title, &item.Question,
-				&item.SourceText, &item.Explanation, &takeaways, &examples, &item.SourceURL, &item.CreatedAt); err != nil {
-				log.Printf("Read note: %v", err)
-				writeLearningError(w, http.StatusInternalServerError, "could not load notes")
-				return
-			}
-			if err := json.Unmarshal(takeaways, &item.KeyTakeaways); err != nil {
-				log.Printf("Decode note takeaways: %v", err)
-				writeLearningError(w, http.StatusInternalServerError, "could not load notes")
-				return
-			}
-			if err := json.Unmarshal(examples, &item.CodeExamples); err != nil {
-				log.Printf("Decode note code examples: %v", err)
-				writeLearningError(w, http.StatusInternalServerError, "could not load notes")
-				return
-			}
-			notes = append(notes, item)
-		}
-		if err := rows.Err(); err != nil {
-			log.Printf("Iterate notes: %v", err)
 			writeLearningError(w, http.StatusInternalServerError, "could not load notes")
 			return
 		}
@@ -249,7 +188,7 @@ func (api *API) HandleNote(w http.ResponseWriter, r *http.Request) {
 		writeLearningError(w, http.StatusUnprocessableEntity, "invalid note id")
 		return
 	}
-	item, err := api.loadNote(r.Context(), userID, noteID)
+	item, err := api.repository.GetNote(r.Context(), userID, noteID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		writeLearningError(w, http.StatusNotFound, "note not found")
 		return
@@ -259,33 +198,9 @@ func (api *API) HandleNote(w http.ResponseWriter, r *http.Request) {
 		writeLearningError(w, http.StatusInternalServerError, "could not load note")
 		return
 	}
-	rows, err := api.db.Query(r.Context(), `
-		SELECT f.id, f.note_id, t.name, n.title, f.front_question, f.back_answer,
-		       f.memory_level, f.next_review_date::text
-		FROM flashcards f
-		JOIN notes n ON n.id = f.note_id
-		JOIN topics t ON t.id = f.topic_id
-		WHERE f.note_id = $1 AND n.user_id = $2
-		ORDER BY f.next_review_date, f.id`, noteID, userID)
+	cards, err := api.repository.ListNoteFlashcards(r.Context(), userID, noteID)
 	if err != nil {
 		log.Printf("Load note flashcards: %v", err)
-		writeLearningError(w, http.StatusInternalServerError, "could not load note")
-		return
-	}
-	defer rows.Close()
-	cards := make([]flashcard, 0)
-	for rows.Next() {
-		var card flashcard
-		if err := rows.Scan(&card.ID, &card.NoteID, &card.TopicName, &card.NoteTitle,
-			&card.FrontQuestion, &card.BackAnswer, &card.MemoryLevel, &card.NextReviewDate); err != nil {
-			log.Printf("Read note flashcard: %v", err)
-			writeLearningError(w, http.StatusInternalServerError, "could not load note")
-			return
-		}
-		cards = append(cards, card)
-	}
-	if err := rows.Err(); err != nil {
-		log.Printf("Iterate note flashcards: %v", err)
 		writeLearningError(w, http.StatusInternalServerError, "could not load note")
 		return
 	}
@@ -323,7 +238,7 @@ func (api *API) HandleNoteChat(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	item, err := api.loadNote(r.Context(), userID, noteID)
+	item, err := api.repository.GetNote(r.Context(), userID, noteID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		writeLearningError(w, http.StatusNotFound, "note not found")
 		return
@@ -360,42 +275,16 @@ func (api *API) HandleNoteChat(w http.ResponseWriter, r *http.Request) {
 			writeLearningError(w, http.StatusBadGateway, "AI could not update note search; please try again")
 			return
 		}
-		takeawaysJSON, err := json.Marshal(reply.KeyTakeaways)
-		if err != nil {
-			log.Printf("Encode updated note takeaways: %v", err)
-			writeLearningError(w, http.StatusInternalServerError, "could not update note")
-			return
-		}
-		examplesJSON, err := json.Marshal(reply.CodeExamples)
-		if err != nil {
-			log.Printf("Encode updated note examples: %v", err)
-			writeLearningError(w, http.StatusInternalServerError, "could not update note")
-			return
-		}
-		err = api.db.QueryRow(r.Context(), `
-			UPDATE notes
-			SET title = $1, ai_explanation = $2, key_takeaways = $3::jsonb,
-			    code_examples = $4::jsonb, embedding = $5::vector
-			WHERE id = $6 AND user_id = $7
-			RETURNING title, ai_explanation, key_takeaways, code_examples`,
-			reply.Title, reply.Explanation, string(takeawaysJSON), string(examplesJSON), embedding,
-			noteID, userID,
-		).Scan(&item.Title, &item.Explanation, &takeawaysJSON, &examplesJSON)
+		updated, err := api.repository.UpdateNoteFromChat(r.Context(), userID, noteID, reply, embedding)
 		if err != nil {
 			log.Printf("Update note from chat: %v", err)
 			writeLearningError(w, http.StatusInternalServerError, "could not update note")
 			return
 		}
-		if err := json.Unmarshal(takeawaysJSON, &item.KeyTakeaways); err != nil {
-			log.Printf("Read updated note takeaways: %v", err)
-			writeLearningError(w, http.StatusInternalServerError, "could not update note")
-			return
-		}
-		if err := json.Unmarshal(examplesJSON, &item.CodeExamples); err != nil {
-			log.Printf("Read updated note examples: %v", err)
-			writeLearningError(w, http.StatusInternalServerError, "could not update note")
-			return
-		}
+		item.Title = updated.Title
+		item.Explanation = updated.Explanation
+		item.KeyTakeaways = updated.KeyTakeaways
+		item.CodeExamples = updated.CodeExamples
 	}
 
 	writeLearningJSON(w, http.StatusOK, noteChatResponse{
@@ -403,29 +292,6 @@ func (api *API) HandleNoteChat(w http.ResponseWriter, r *http.Request) {
 		Note:    item,
 		Updated: reply.UpdateNote,
 	})
-}
-
-func (api *API) loadNote(ctx context.Context, userID, noteID uuid.UUID) (note, error) {
-	var item note
-	var takeaways, examples []byte
-	err := api.db.QueryRow(ctx, `
-		SELECT n.id, n.topic_id, t.name, n.title, n.question_asked, n.source_text,
-		       n.ai_explanation, n.key_takeaways, n.code_examples, n.source_url, n.created_at
-		FROM notes n
-		JOIN topics t ON t.id = n.topic_id
-		WHERE n.id = $1 AND n.user_id = $2`, noteID, userID,
-	).Scan(&item.ID, &item.TopicID, &item.TopicName, &item.Title, &item.Question,
-		&item.SourceText, &item.Explanation, &takeaways, &examples, &item.SourceURL, &item.CreatedAt)
-	if err != nil {
-		return note{}, err
-	}
-	if err := json.Unmarshal(takeaways, &item.KeyTakeaways); err != nil {
-		return note{}, err
-	}
-	if err := json.Unmarshal(examples, &item.CodeExamples); err != nil {
-		return note{}, err
-	}
-	return item, nil
 }
 
 func (api *API) handleCreateNote(w http.ResponseWriter, r *http.Request, userID uuid.UUID) {
@@ -454,10 +320,8 @@ func (api *API) handleCreateNote(w http.ResponseWriter, r *http.Request, userID 
 		writeLearningError(w, http.StatusUnprocessableEntity, "choose a valid topic")
 		return
 	}
-	var topicName string
-	if err := api.db.QueryRow(r.Context(),
-		`SELECT name FROM topics WHERE id = $1 AND user_id = $2`, topicID, userID,
-	).Scan(&topicName); err != nil {
+	topicName, err := api.repository.GetTopicName(r.Context(), userID, topicID)
+	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			writeLearningError(w, http.StatusUnprocessableEntity, "choose one of your topics")
 			return
@@ -500,89 +364,20 @@ func (api *API) handleCreateNote(w http.ResponseWriter, r *http.Request, userID 
 		return
 	}
 
-	related, err := api.findRelatedNotes(r.Context(), userID, uuid.Nil, embedding)
+	related, err := api.repository.FindRelatedNotes(r.Context(), userID, uuid.Nil, embedding)
 	if err != nil {
 		log.Printf("Find related notes: %v", err)
 		writeLearningError(w, http.StatusInternalServerError, "could not find related notes")
 		return
 	}
 
-	tx, err := api.db.Begin(r.Context())
+	saved, savedCards, err := api.repository.CreateNote(r.Context(), userID, topicID, topicName, input, lesson, embedding)
 	if err != nil {
-		log.Printf("Begin note transaction: %v", err)
-		writeLearningError(w, http.StatusInternalServerError, "could not save note")
-		return
-	}
-	defer tx.Rollback(r.Context())
-
-	var saved note
-	var sourceURL *string
-	if input.SourceURL != "" {
-		sourceURL = &input.SourceURL
-	}
-	takeawaysJSON, err := json.Marshal(lesson.KeyTakeaways)
-	if err != nil {
-		log.Printf("Encode note takeaways: %v", err)
-		writeLearningError(w, http.StatusInternalServerError, "could not save note")
-		return
-	}
-	examplesJSON, err := json.Marshal(lesson.CodeExamples)
-	if err != nil {
-		log.Printf("Encode note code examples: %v", err)
-		writeLearningError(w, http.StatusInternalServerError, "could not save note")
-		return
-	}
-	err = tx.QueryRow(r.Context(), `
-		INSERT INTO notes (
-			user_id, topic_id, title, question_asked, source_text, ai_explanation,
-			key_takeaways, code_examples, source_url, embedding
-		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9, $10::vector)
-		RETURNING id, created_at`,
-		userID, topicID, lesson.Title, input.Question, input.SourceText, lesson.Explanation,
-		string(takeawaysJSON), string(examplesJSON), sourceURL, embedding,
-	).Scan(&saved.ID, &saved.CreatedAt)
-	if err != nil {
-		log.Printf("Insert note: %v", err)
-		writeLearningError(w, http.StatusInternalServerError, "could not save note")
-		return
-	}
-	saved.TopicID = topicID
-	saved.TopicName = topicName
-	saved.Title = lesson.Title
-	saved.Question = input.Question
-	saved.SourceText = input.SourceText
-	saved.Explanation = lesson.Explanation
-	saved.KeyTakeaways = lesson.KeyTakeaways
-	saved.CodeExamples = lesson.CodeExamples
-	saved.SourceURL = sourceURL
-
-	savedCards := make([]flashcard, 0)
-	if input.SaveToDeck {
-		for _, generated := range lesson.Flashcards {
-			var card flashcard
-			err := tx.QueryRow(r.Context(), `
-				INSERT INTO flashcards (note_id, topic_id, front_question, back_answer, next_review_date)
-				VALUES ($1, $2, $3, $4, CURRENT_DATE + 1)
-				RETURNING id, memory_level, next_review_date::text`,
-				saved.ID, topicID, generated.Front, generated.Back,
-			).Scan(&card.ID, &card.MemoryLevel, &card.NextReviewDate)
-			if err != nil {
-				log.Printf("Insert flashcard: %v", err)
-				writeLearningError(w, http.StatusInternalServerError, "could not save quiz cards")
-				return
-			}
-			card.NoteID = saved.ID
-			card.TopicName = topicName
-			card.NoteTitle = lesson.Title
-			card.FrontQuestion = generated.Front
-			card.BackAnswer = generated.Back
-			savedCards = append(savedCards, card)
+		log.Printf("Save note: %v", err)
+		if errors.Is(err, errSaveQuizCards) {
+			writeLearningError(w, http.StatusInternalServerError, "could not save quiz cards")
+			return
 		}
-	}
-
-	if err := tx.Commit(r.Context()); err != nil {
-		log.Printf("Commit note transaction: %v", err)
 		writeLearningError(w, http.StatusInternalServerError, "could not save note")
 		return
 	}
@@ -616,7 +411,7 @@ func (api *API) HandleSearch(w http.ResponseWriter, r *http.Request) {
 		writeLearningError(w, http.StatusBadGateway, "semantic search is temporarily unavailable")
 		return
 	}
-	results, err := api.searchNotes(r.Context(), userID, query, embedding)
+	results, err := api.repository.SearchNotes(r.Context(), userID, query, embedding)
 	if err != nil {
 		log.Printf("Search notes: %v", err)
 		writeLearningError(w, http.StatusInternalServerError, "could not search notes")
@@ -631,33 +426,9 @@ func (api *API) HandleDueReviews(w http.ResponseWriter, r *http.Request) {
 		writeLearningError(w, http.StatusUnauthorized, "authentication required")
 		return
 	}
-	rows, err := api.db.Query(r.Context(), `
-		SELECT f.id, f.note_id, t.name, n.title, f.front_question,
-		       f.back_answer, f.memory_level, f.next_review_date::text
-		FROM flashcards f
-		JOIN notes n ON n.id = f.note_id
-		JOIN topics t ON t.id = f.topic_id
-		WHERE n.user_id = $1 AND f.next_review_date <= CURRENT_DATE
-		ORDER BY f.next_review_date, f.memory_level, f.id`, userID)
+	cards, err := api.repository.ListDueReviews(r.Context(), userID)
 	if err != nil {
 		log.Printf("Load due reviews: %v", err)
-		writeLearningError(w, http.StatusInternalServerError, "could not load review cards")
-		return
-	}
-	defer rows.Close()
-	cards := make([]flashcard, 0)
-	for rows.Next() {
-		var card flashcard
-		if err := rows.Scan(&card.ID, &card.NoteID, &card.TopicName, &card.NoteTitle,
-			&card.FrontQuestion, &card.BackAnswer, &card.MemoryLevel, &card.NextReviewDate); err != nil {
-			log.Printf("Read review card: %v", err)
-			writeLearningError(w, http.StatusInternalServerError, "could not load review cards")
-			return
-		}
-		cards = append(cards, card)
-	}
-	if err := rows.Err(); err != nil {
-		log.Printf("Iterate review cards: %v", err)
 		writeLearningError(w, http.StatusInternalServerError, "could not load review cards")
 		return
 	}
@@ -685,50 +456,13 @@ func (api *API) HandleGradeReview(w http.ResponseWriter, r *http.Request) {
 		writeLearningError(w, http.StatusUnprocessableEntity, "choose forgot, got_it, or too_easy")
 		return
 	}
-	tx, err := api.db.Begin(r.Context())
-	if err != nil {
-		log.Printf("Begin review transaction: %v", err)
-		writeLearningError(w, http.StatusInternalServerError, "could not update review card")
-		return
-	}
-	defer tx.Rollback(r.Context())
-
-	var level int
-	err = tx.QueryRow(r.Context(), `
-		SELECT f.memory_level
-		FROM flashcards f
-		JOIN notes n ON n.id = f.note_id
-		WHERE f.id = $1 AND n.user_id = $2
-		FOR UPDATE OF f`, cardID, userID).Scan(&level)
+	nextLevel, days, err := api.repository.GradeReview(r.Context(), userID, cardID, input.Grade)
 	if errors.Is(err, pgx.ErrNoRows) {
 		writeLearningError(w, http.StatusNotFound, "review card not found")
 		return
 	}
 	if err != nil {
-		log.Printf("Load review card level: %v", err)
-		writeLearningError(w, http.StatusInternalServerError, "could not update review card")
-		return
-	}
-
-	nextLevel := nextMemoryLevel(level, input.Grade)
-	days := reviewIntervals[nextLevel-1]
-	command, err := tx.Exec(r.Context(), `
-		UPDATE flashcards f
-		SET memory_level = $1, next_review_date = CURRENT_DATE + $2::int
-		FROM notes n
-		WHERE f.id = $3 AND n.id = f.note_id AND n.user_id = $4`,
-		nextLevel, days, cardID, userID)
-	if err != nil {
-		log.Printf("Update review card: %v", err)
-		writeLearningError(w, http.StatusInternalServerError, "could not update review card")
-		return
-	}
-	if command.RowsAffected() == 0 {
-		writeLearningError(w, http.StatusNotFound, "review card not found")
-		return
-	}
-	if err := tx.Commit(r.Context()); err != nil {
-		log.Printf("Commit review transaction: %v", err)
+		log.Printf("Grade review card: %v", err)
 		writeLearningError(w, http.StatusInternalServerError, "could not update review card")
 		return
 	}
@@ -744,126 +478,13 @@ func (api *API) HandleStats(w http.ResponseWriter, r *http.Request) {
 		writeLearningError(w, http.StatusUnauthorized, "authentication required")
 		return
 	}
-	var stats struct {
-		Notes      int `json:"notes"`
-		Cards      int `json:"cards"`
-		DueToday   int `json:"dueToday"`
-		TopicCount int `json:"topics"`
-	}
-	err := api.db.QueryRow(r.Context(), `
-		SELECT
-			(SELECT count(*) FROM notes WHERE user_id = $1),
-			(SELECT count(*) FROM flashcards f JOIN notes n ON n.id = f.note_id WHERE n.user_id = $1),
-			(SELECT count(*) FROM flashcards f JOIN notes n ON n.id = f.note_id WHERE n.user_id = $1 AND f.next_review_date <= CURRENT_DATE),
-			(SELECT count(*) FROM topics WHERE user_id = $1)`, userID,
-	).Scan(&stats.Notes, &stats.Cards, &stats.DueToday, &stats.TopicCount)
+	stats, err := api.repository.LoadStats(r.Context(), userID)
 	if err != nil {
 		log.Printf("Load learning stats: %v", err)
 		writeLearningError(w, http.StatusInternalServerError, "could not load dashboard")
 		return
 	}
 	writeLearningJSON(w, http.StatusOK, stats)
-}
-
-func (api *API) ensureDefaultTopics(ctx context.Context, userID uuid.UUID) error {
-	for _, name := range []string{"Software", "Systems Design", "Web Development", "Other"} {
-		if _, err := api.db.Exec(ctx, `
-			INSERT INTO topics (user_id, name) VALUES ($1, $2)
-			ON CONFLICT DO NOTHING`, userID, name); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (api *API) searchNotes(ctx context.Context, userID uuid.UUID, query, embedding string) ([]note, error) {
-	rows, err := api.db.Query(ctx, `
-		WITH vector_hits AS (
-			SELECT id, row_number() OVER (ORDER BY embedding <=> $1::vector) AS rank
-			FROM notes WHERE user_id = $2 ORDER BY embedding <=> $1::vector LIMIT 20
-		),
-		text_hits AS (
-			SELECT id, row_number() OVER (
-				ORDER BY ts_rank(
-					to_tsvector('english', question_asked || ' ' || ai_explanation),
-					plainto_tsquery('english', $3)
-				) DESC
-			) AS rank
-			FROM notes
-			WHERE user_id = $2 AND to_tsvector('english', question_asked || ' ' || ai_explanation)
-				@@ plainto_tsquery('english', $3)
-			LIMIT 20
-		),
-		ranks AS (
-			SELECT COALESCE(v.id, t.id) AS id,
-			       COALESCE(1.0 / (60 + v.rank), 0.0) + COALESCE(1.0 / (60 + t.rank), 0.0) AS score
-			FROM vector_hits v FULL OUTER JOIN text_hits t ON t.id = v.id
-		)
-		SELECT n.id, n.topic_id, topics.name, n.title, n.question_asked, n.source_text,
-		       n.ai_explanation, n.key_takeaways, n.code_examples, n.source_url, n.created_at
-		FROM ranks JOIN notes n ON n.id = ranks.id
-		JOIN topics ON topics.id = n.topic_id
-		WHERE n.user_id = $2
-		ORDER BY ranks.score DESC LIMIT 10`, embedding, userID, query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	results := make([]note, 0)
-	for rows.Next() {
-		var item note
-		var takeaways, examples []byte
-		if err := rows.Scan(&item.ID, &item.TopicID, &item.TopicName, &item.Title, &item.Question,
-			&item.SourceText, &item.Explanation, &takeaways, &examples, &item.SourceURL, &item.CreatedAt); err != nil {
-			return nil, err
-		}
-		if err := json.Unmarshal(takeaways, &item.KeyTakeaways); err != nil {
-			return nil, err
-		}
-		if err := json.Unmarshal(examples, &item.CodeExamples); err != nil {
-			return nil, err
-		}
-		results = append(results, item)
-	}
-	return results, rows.Err()
-}
-
-func (api *API) findRelatedNotes(ctx context.Context, userID, excludeID uuid.UUID, embedding string) ([]map[string]any, error) {
-	rows, err := api.db.Query(ctx, `
-		SELECT n.id, n.title, t.name, 1 - (n.embedding <=> $1::vector) AS similarity
-		FROM notes n JOIN topics t ON t.id = n.topic_id
-		WHERE n.user_id = $2 AND n.id <> $3
-		ORDER BY n.embedding <=> $1::vector
-		LIMIT 3`, embedding, userID, excludeID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	type relatedNote struct {
-		ID         uuid.UUID `json:"id"`
-		Title      string    `json:"title"`
-		TopicName  string    `json:"topicName"`
-		Similarity float64   `json:"similarity"`
-	}
-	related := make([]relatedNote, 0)
-	for rows.Next() {
-		var item relatedNote
-		if err := rows.Scan(&item.ID, &item.Title, &item.TopicName, &item.Similarity); err != nil {
-			return nil, err
-		}
-		related = append(related, item)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	result := make([]map[string]any, len(related))
-	for i, item := range related {
-		result[i] = map[string]any{
-			"id": item.ID, "title": item.Title,
-			"topicName": item.TopicName, "similarity": item.Similarity,
-		}
-	}
-	return result, nil
 }
 
 func nextMemoryLevel(current int, grade string) int {
