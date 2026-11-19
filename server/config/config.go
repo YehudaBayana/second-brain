@@ -9,6 +9,20 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const (
+	GeminiGenerationAttemptTimeout = 5 * time.Minute
+	GeminiGenerationContextTimeout = 16 * time.Minute
+	HTTPServerWriteTimeout         = 17 * time.Minute
+)
+
+func GeminiGenerationModels() []string {
+	return []string{
+		"gemini-4-hydrogen",
+		"gemini-3.8-flash",
+		"gemini-3.5-flash-lite",
+	}
+}
+
 type Config struct {
 	DatabaseURL             string
 	RedisAddress            string
@@ -44,7 +58,7 @@ func Load() (Config, error) {
 		ServerAddress:           ":8080",
 		ServerReadHeaderTimeout: 10 * time.Second,
 		ServerReadTimeout:       30 * time.Second,
-		ServerWriteTimeout:      120 * time.Second,
+		ServerWriteTimeout:      HTTPServerWriteTimeout,
 		ServerIdleTimeout:       120 * time.Second,
 	}, nil
 }

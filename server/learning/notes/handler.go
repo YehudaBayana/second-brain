@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/YehudaBayana/second-brain/server/auth"
+	"github.com/YehudaBayana/second-brain/server/config"
 	"github.com/YehudaBayana/second-brain/server/learning/embedding"
 	"github.com/YehudaBayana/second-brain/server/learning/httpapi"
 	"github.com/YehudaBayana/second-brain/server/learning/models"
@@ -177,7 +178,7 @@ func (api *API) HandleNoteChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	generationContext, cancelGeneration := context.WithTimeout(r.Context(), 60*time.Second)
+	generationContext, cancelGeneration := context.WithTimeout(r.Context(), config.GeminiGenerationContextTimeout)
 	defer cancelGeneration()
 	reply, err := generateNoteChat(generationContext, api.ai, item, input.History, input.Message)
 	if err != nil {
@@ -259,7 +260,7 @@ func (api *API) handleCreateNote(w http.ResponseWriter, r *http.Request, userID 
 		return
 	}
 
-	generationContext, cancelGeneration := context.WithTimeout(r.Context(), 60*time.Second)
+	generationContext, cancelGeneration := context.WithTimeout(r.Context(), config.GeminiGenerationContextTimeout)
 	defer cancelGeneration()
 	lesson, err := generateLesson(generationContext, api.ai, input.Question, input.SourceText)
 	if err != nil {

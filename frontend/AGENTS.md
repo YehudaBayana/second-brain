@@ -16,5 +16,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Use TanStack Query for remote state. Reuse feature query keys/options for server prefetch and client hooks; convert transport DTOs to domain entities in selectors.
 - Keep transient state local; use feature Zustand stores only for state shared across screens. Do not mirror query data in Zustand.
 - Style with Mantine theme and component props; avoid CSS and Tailwind unless explicitly requested. Then use Tailwind only, never CSS files or inline styles; prefer different components over CSS-dependent designs.
-- Keep agent rules clear, short, concise, and understandable.
 - Run `yarn lint` and `yarn tsc --noEmit`; use `yarn build --webpack` for build validation.

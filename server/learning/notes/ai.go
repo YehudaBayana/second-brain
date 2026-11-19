@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
+	"github.com/YehudaBayana/second-brain/server/config"
 	"github.com/YehudaBayana/second-brain/server/learning/models"
 	"google.golang.org/genai"
 )
@@ -25,8 +27,11 @@ Question:
 Source notes (may be empty):
 %s`, question, sourceText)
 
+	// this fetch the exact live list of models enabled for my API key
+	// models,err := client.Models.List(ctx, &genai.ListModelsConfig{});
+
 	stringSchema := &genai.Schema{Type: genai.TypeString}
-	result, err := client.Models.GenerateContent(ctx, "gemini-3.5-flash", []*genai.Content{
+	result, err := generateContentWithFallback(ctx, client, []*genai.Content{
 		genai.NewContentFromText(prompt, genai.RoleUser),
 	}, &genai.GenerateContentConfig{
 		Temperature:      genai.Ptr[float32](0.3),
@@ -119,7 +124,7 @@ Recent conversation (JSON):
 Latest user message:
 %s`, noteJSON, historyJSON, message)
 	stringSchema := &genai.Schema{Type: genai.TypeString}
-	result, err := client.Models.GenerateContent(ctx, "gemini-3.5-flash", []*genai.Content{
+	result, err := generateContentWithFallback(ctx, client, []*genai.Content{
 		genai.NewContentFromText(prompt, genai.RoleUser),
 	}, &genai.GenerateContentConfig{
 		Temperature:      genai.Ptr[float32](0.3),
@@ -156,4 +161,40 @@ Latest user message:
 		return generatedNoteChat{}, errors.New("Gemini response is missing required chat content")
 	}
 	return reply, nil
+}
+
+func generateContentWithFallback(ctx context.Context, client *genai.Client, contents []*genai.Content, generationConfig *genai.GenerateContentConfig) (*genai.GenerateContentResponse, error) {
+	var lastErr error
+	for _, model := range config.GeminiGenerationModels() {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+
+		attemptContext, cancel := context.WithTimeout(ctx, config.GeminiGenerationAttemptTimeout)
+		result, err := client.Models.GenerateContent(attemptContext, model, contents, generationConfig)
+		cancel()
+		if err == nil {
+			return result, nil
+		}
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		if !isTransientGenerationError(err) {
+			return nil, err
+		}
+		log.Printf("Gemini GenerateContent failed for model %q; trying fallback if available: %v", model, err)
+		lastErr = err
+	}
+	return nil, lastErr
+}
+
+func isTransientGenerationError(err error) bool {
+	if errors.Is(err, context.DeadlineExceeded) {
+		return true
+	}
+	message := strings.ToUpper(err.Error())
+	return strings.Contains(message, "503") ||
+		strings.Contains(message, "UNAVAILABLE") ||
+		strings.Contains(message, "504") ||
+		strings.Contains(message, "DEADLINE_EXCEEDED")
 }
