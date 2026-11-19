@@ -3,17 +3,18 @@ package notes
 import (
 	"context"
 	"errors"
+	"log"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
+
 	"github.com/YehudaBayana/second-brain/server/auth"
 	"github.com/YehudaBayana/second-brain/server/learning/embedding"
 	"github.com/YehudaBayana/second-brain/server/learning/httpapi"
 	"github.com/YehudaBayana/second-brain/server/learning/models"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"log"
-	"net/http"
-	"net/url"
-	"strings"
-	"time"
 )
 
 type note = models.Note
@@ -85,6 +86,7 @@ func (api *API) HandleNotes(w http.ResponseWriter, r *http.Request) {
 
 func (api *API) HandleNote(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.UserIDFrom(r.Context())
+	var err error
 	if !ok {
 		httpapi.WriteError(w, http.StatusUnauthorized, "authentication required")
 		return
@@ -94,23 +96,43 @@ func (api *API) HandleNote(w http.ResponseWriter, r *http.Request) {
 		httpapi.WriteError(w, http.StatusUnprocessableEntity, "invalid note id")
 		return
 	}
-	item, err := api.repository.GetNote(r.Context(), userID, noteID)
-	if errors.Is(err, pgx.ErrNoRows) {
-		httpapi.WriteError(w, http.StatusNotFound, "note not found")
-		return
+	var item note
+	var cards []flashcard
+	switch r.Method {
+	case http.MethodGet:
+		item, err = api.repository.GetNote(r.Context(), userID, noteID)
+		if errors.Is(err, pgx.ErrNoRows) {
+			httpapi.WriteError(w, http.StatusNotFound, "note not found")
+			return
+		}
+		if err != nil {
+			log.Printf("Load note: %v", err)
+			httpapi.WriteError(w, http.StatusInternalServerError, "could not load note")
+			return
+		}
+		cards, err = api.repository.ListNoteFlashcards(r.Context(), userID, noteID)
+		if err != nil {
+			log.Printf("Load note flashcards: %v", err)
+			httpapi.WriteError(w, http.StatusInternalServerError, "could not load note")
+			return
+		}
+		httpapi.WriteJSON(w, http.StatusOK, noteDetail{Note: item, Cards: cards})
+	case http.MethodDelete:
+		err = api.repository.DeleteNote(r.Context(), userID, noteID)
+		if err != nil {
+			log.Printf("Delete note: %v", err)
+			httpapi.WriteError(w, http.StatusInternalServerError, "could not DELETE note")
+			return
+		}
+
+		httpapi.WriteJSON(w, http.StatusOK, struct {
+			Deleted bool      `json:"deleted"`
+			NoteId  uuid.UUID `json:"note_id"`
+		}{
+			Deleted: true,
+			NoteId:  noteID,
+		})
 	}
-	if err != nil {
-		log.Printf("Load note: %v", err)
-		httpapi.WriteError(w, http.StatusInternalServerError, "could not load note")
-		return
-	}
-	cards, err := api.repository.ListNoteFlashcards(r.Context(), userID, noteID)
-	if err != nil {
-		log.Printf("Load note flashcards: %v", err)
-		httpapi.WriteError(w, http.StatusInternalServerError, "could not load note")
-		return
-	}
-	httpapi.WriteJSON(w, http.StatusOK, noteDetail{Note: item, Cards: cards})
 }
 
 func (api *API) HandleNoteChat(w http.ResponseWriter, r *http.Request) {

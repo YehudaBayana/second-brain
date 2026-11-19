@@ -3,6 +3,7 @@ package notes
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -108,6 +109,28 @@ func (repository *Repository) UpdateNoteFromChat(
 		return note{}, err
 	}
 	return item, nil
+}
+
+func (repository *Repository) DeleteNote(
+	ctx context.Context,
+	userID, noteID uuid.UUID,
+) error {
+
+	cmdTag, err := repository.db.Exec(ctx, `
+	DELETE FROM notes
+	WHERE id = $1 AND user_id = $2`,
+		noteID, userID,
+	)
+	if err != nil {
+		return err
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		// No note matched that id and user_id
+		return errors.New("note not found")
+	}
+
+	return nil
 }
 
 func (repository *Repository) CreateNote(
