@@ -40,10 +40,10 @@ func (repository *Repository) GetNote(ctx context.Context, userID, noteID uuid.U
 	if err != nil {
 		return note{}, err
 	}
-	if err := json.Unmarshal(takeaways, &item.KeyTakeaways); err != nil {
+	if err := unmarshalOptionalStrings(takeaways, &item.KeyTakeaways); err != nil {
 		return note{}, err
 	}
-	if err := json.Unmarshal(examples, &item.CodeExamples); err != nil {
+	if err := unmarshalOptionalStrings(examples, &item.CodeExamples); err != nil {
 		return note{}, err
 	}
 	return item, nil
