@@ -1,15 +1,19 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import { createNote, getNote, getNotes, getTopics } from "../api/notes";
-import type {
-  Note,
-  NoteDetail,
-} from "../model/types";
+  createNote,
+  getNote,
+  getNotes,
+  getTopics,
+  deleteNote,
+} from "../api/notes";
+import type { Note, NoteDetail } from "../model/types";
 import { NoteEntity } from "../model/NoteEntity";
-import { dashboardKeys, noteKeys, topicKeys, reviewKeys } from "@/src/services/keys";
+import {
+  dashboardKeys,
+  noteKeys,
+  topicKeys,
+  reviewKeys,
+} from "@/src/services/keys";
 
 export const noteQueries = {
   topics: () => ({
@@ -51,6 +55,22 @@ export function useCreateNote() {
   return useMutation({
     mutationFn: createNote,
     onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: noteKeys.list() }),
+        queryClient.invalidateQueries({ queryKey: reviewKeys.dueCards() }),
+        queryClient.invalidateQueries({ queryKey: dashboardKeys.stats() }),
+      ]);
+    },
+  });
+}
+
+export function useDeleteNote() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteNote,
+    onSuccess: async (res) => {
+      console.log("delete not res: ", res);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: noteKeys.list() }),
         queryClient.invalidateQueries({ queryKey: reviewKeys.dueCards() }),

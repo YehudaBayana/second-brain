@@ -1,7 +1,4 @@
-import {
-  defaultHttpClient,
-  HttpClient,
-} from "@/src/services/apiClient";
+import { defaultHttpClient, HttpClient } from "@/src/services/apiClient";
 import type {
   CreateNoteInput,
   CreatedNote,
@@ -23,7 +20,15 @@ export class NotesService {
   }
 
   public getNote(noteId: string): Promise<NoteDetail> {
-    return this.http.get<NoteDetail>(`/api/notes/${encodeURIComponent(noteId)}`);
+    return this.http.get<NoteDetail>(
+      `/api/notes/${encodeURIComponent(noteId)}`,
+    );
+  }
+
+  public deleteNote(noteId: string): Promise<NoteDetail> {
+    return this.http.delete<NoteDetail>(
+      `/api/notes/${encodeURIComponent(noteId)}`,
+    );
   }
 
   public createNote(input: CreateNoteInput): Promise<CreatedNote> {
