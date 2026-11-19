@@ -25,7 +25,13 @@ func allowedOrigins() []string {
 // CORSMiddleware is a custom middleware function to handle Cross-Origin requests
 func CORSMiddleware(nextHandler http.Handler) http.Handler {
 	origins := allowedOrigins()
+	return CORSWithOrigins(nextHandler, origins)
+}
 
+func CORSWithOrigins(nextHandler http.Handler, origins []string) http.Handler {
+	if len(origins) == 0 {
+		origins = []string{defaultAllowedOrigin}
+	}
 	return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
 		// Echo the request origin only when allowed; credentials forbid a wildcard.
 		allowOrigin := origins[0]
