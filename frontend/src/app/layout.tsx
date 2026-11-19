@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "@mantine/core/styles.css";
 import QueryProvider from "../providers/QueryProvider";
 import { MantineProvider } from "@mantine/core";
+import { ModalsProvider } from "@mantine/modals";
 import { theme } from "./theme";
 
 export const metadata: Metadata = {
@@ -19,7 +20,7 @@ export default function RootLayout({
       <body>
         <QueryProvider>
           <MantineProvider theme={theme} forceColorScheme="light">
-            {children}
+            <ModalsProvider>{children}</ModalsProvider>
           </MantineProvider>
         </QueryProvider>
       </body>

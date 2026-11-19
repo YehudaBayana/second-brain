@@ -521,6 +521,11 @@
   resolved "https://registry.yarnpkg.com/@mantine/hooks/-/hooks-9.8.0.tgz#a73143a749048e4e6056dee37a8e3837f09d225e"
   integrity sha512-fUA3PS8Ys2kih6VEuozgdEO0UyiGhryTJqx+Bf2lxee1XpXQ0XFXsQY7lNB4f+eBDzYCczYykQjIIuUzyJft7A==
 
+"@mantine/modals@^9.8.1":
+  version "9.8.1"
+  resolved "https://registry.yarnpkg.com/@mantine/modals/-/modals-9.8.1.tgz#b48fcc1c530c72dbf6b3bf2f98e9a0de78cc7230"
+  integrity sha512-QwlPGmwyWXIq5YM3xzbeVQ6dJXTm98YBcrI7YQ6lraHxEXHZAr6M2HDIF4Pqd158mP/Oc+HL+UPd0cvSeZfHLQ==
+
 "@napi-rs/wasm-runtime@^1.1.4":
   version "1.2.7"
   resolved "https://registry.yarnpkg.com/@napi-rs/wasm-runtime/-/wasm-runtime-1.2.7.tgz#8af2f08d9c9ef4fbbee90060dc6b5c1ca19e4739"

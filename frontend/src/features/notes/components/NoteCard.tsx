@@ -10,6 +10,7 @@ import {
 import { FcDeleteRow } from "react-icons/fc";
 import { CiSettings } from "react-icons/ci";
 import { useDeleteNote } from "../query/useNotes";
+import { openConfirmDialog } from "@/src/utils/ConfirmAction";
 
 export function NoteCard({ note: rawNote }: { note: Note | NoteEntity }) {
   const note =
@@ -26,10 +27,20 @@ export function NoteCard({ note: rawNote }: { note: Note | NoteEntity }) {
     {
       label: "Delete note",
       icon: <FcDeleteRow size={16} />,
-      onClick: () => deleteNote(note.id),
+      onClick: () => handleDeleteClick(),
       color: "red",
     },
   ];
+
+  // Inside your NoteCard component:
+  const handleDeleteClick = () => {
+    openConfirmDialog({
+      title: "Delete note",
+      message: `Are you sure you want to delete "${note.title}"? This cannot be undone.`,
+      confirmLabel: "Delete",
+      onConfirm: () => deleteNote(note.id),
+    });
+  };
 
   return (
     <ContextMenuWrapper items={menuItems}>
