@@ -7,7 +7,7 @@ import (
 	"github.com/YehudaBayana/second-brain/server/middleware"
 )
 
-func New(cfg config.Config, handler http.Handler) *http.Server {
+func Init(cfg config.Config, handler http.Handler) *http.Server {
 	return &http.Server{
 		Addr:              cfg.ServerAddress,
 		Handler:           middleware.CORSWithOrigins(handler, cfg.AllowedOrigins),

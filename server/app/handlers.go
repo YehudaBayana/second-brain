@@ -17,7 +17,7 @@ type Handlers struct {
 	SessionStore *auth.SessionStore
 }
 
-func NewHandlers(cfg config.Config, services infrastructure.Services) *Handlers {
+func InitHandlers(cfg config.Config, services infrastructure.Services) *Handlers {
 	sessionStore := auth.NewSessionStore(services.Database)
 	authRepository := auth.NewRepository(sessionStore, services.Database, cfg.CookieSecure)
 

@@ -29,9 +29,9 @@ func main() {
 	}
 	defer cleanup()
 
-	handlers := app.NewHandlers(cfg, services)
-	mux := routes.New(handlers)
-	server := httpserver.New(cfg, mux)
+	handlers := app.InitHandlers(cfg, services)
+	mux := routes.Init(handlers)
+	server := httpserver.Init(cfg, mux)
 
 	log.Printf("Second Brain API listening on %s", server.Addr)
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
