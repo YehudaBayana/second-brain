@@ -1,68 +1,13 @@
-package learning
+package notes
 
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-var errSaveQuizCards = errors.New("save quiz cards")
-
-type Repository struct {
-	db *pgxpool.Pool
-}
-
-func NewRepository(db *pgxpool.Pool) *Repository {
-	return &Repository{db: db}
-}
-
-type learningStats struct {
-	Notes      int `json:"notes"`
-	Cards      int `json:"cards"`
-	DueToday   int `json:"dueToday"`
-	TopicCount int `json:"topics"`
-}
-
-func (repository *Repository) ListTopics(ctx context.Context, userID uuid.UUID) ([]topic, error) {
-	for _, name := range []string{"Software", "Systems Design", "Web Development", "Other"} {
-		if _, err := repository.db.Exec(ctx, `
-			INSERT INTO topics (user_id, name) VALUES ($1, $2)
-			ON CONFLICT DO NOTHING`, userID, name); err != nil {
-			return nil, err
-		}
-	}
-
-	rows, err := repository.db.Query(ctx,
-		`SELECT id, name FROM topics WHERE user_id = $1 ORDER BY name`, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	topics := make([]topic, 0)
-	for rows.Next() {
-		var item topic
-		if err := rows.Scan(&item.ID, &item.Name); err != nil {
-			return nil, err
-		}
-		topics = append(topics, item)
-	}
-	return topics, rows.Err()
-}
-
-func (repository *Repository) CreateTopic(ctx context.Context, userID uuid.UUID, name string) (topic, error) {
-	var item topic
-	err := repository.db.QueryRow(ctx,
-		`INSERT INTO topics (user_id, name) VALUES ($1, $2) RETURNING id, name`,
-		userID, name,
-	).Scan(&item.ID, &item.Name)
-	return item, err
-}
 
 func (repository *Repository) ListNotes(ctx context.Context, userID uuid.UUID) ([]note, error) {
 	rows, err := repository.db.Query(ctx, `
@@ -119,6 +64,14 @@ func (repository *Repository) ListNoteFlashcards(ctx context.Context, userID, no
 	return scanFlashcards(rows)
 }
 
+func (repository *Repository) GetTopicName(ctx context.Context, userID, topicID uuid.UUID) (string, error) {
+	var name string
+	err := repository.db.QueryRow(ctx,
+		`SELECT name FROM topics WHERE id = $1 AND user_id = $2`, topicID, userID,
+	).Scan(&name)
+	return name, err
+}
+
 func (repository *Repository) UpdateNoteFromChat(
 	ctx context.Context,
 	userID, noteID uuid.UUID,
@@ -155,14 +108,6 @@ func (repository *Repository) UpdateNoteFromChat(
 		return note{}, err
 	}
 	return item, nil
-}
-
-func (repository *Repository) GetTopicName(ctx context.Context, userID, topicID uuid.UUID) (string, error) {
-	var name string
-	err := repository.db.QueryRow(ctx,
-		`SELECT name FROM topics WHERE id = $1 AND user_id = $2`, topicID, userID,
-	).Scan(&name)
-	return name, err
 }
 
 func (repository *Repository) CreateNote(
@@ -244,42 +189,6 @@ func (repository *Repository) CreateNote(
 	return saved, savedCards, nil
 }
 
-func (repository *Repository) SearchNotes(ctx context.Context, userID uuid.UUID, query, embedding string) ([]note, error) {
-	rows, err := repository.db.Query(ctx, `
-		WITH vector_hits AS (
-			SELECT id, row_number() OVER (ORDER BY embedding <=> $1::vector) AS rank
-			FROM notes WHERE user_id = $2 ORDER BY embedding <=> $1::vector LIMIT 20
-		),
-		text_hits AS (
-			SELECT id, row_number() OVER (
-				ORDER BY ts_rank(
-					to_tsvector('english', question_asked || ' ' || ai_explanation),
-					plainto_tsquery('english', $3)
-				) DESC
-			) AS rank
-			FROM notes
-			WHERE user_id = $2 AND to_tsvector('english', question_asked || ' ' || ai_explanation)
-				@@ plainto_tsquery('english', $3)
-			LIMIT 20
-		),
-		ranks AS (
-			SELECT COALESCE(v.id, t.id) AS id,
-			       COALESCE(1.0 / (60 + v.rank), 0.0) + COALESCE(1.0 / (60 + t.rank), 0.0) AS score
-			FROM vector_hits v FULL OUTER JOIN text_hits t ON t.id = v.id
-		)
-		SELECT n.id, n.topic_id, topics.name, n.title, n.question_asked, n.source_text,
-		       n.ai_explanation, n.key_takeaways, n.code_examples, n.source_url, n.created_at
-		FROM ranks JOIN notes n ON n.id = ranks.id
-		JOIN topics ON topics.id = n.topic_id
-		WHERE n.user_id = $2
-		ORDER BY ranks.score DESC LIMIT 10`, embedding, userID, query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	return scanNotes(rows)
-}
-
 func (repository *Repository) FindRelatedNotes(
 	ctx context.Context,
 	userID, excludeID uuid.UUID,
@@ -320,72 +229,6 @@ func (repository *Repository) FindRelatedNotes(
 		}
 	}
 	return result, nil
-}
-
-func (repository *Repository) ListDueReviews(ctx context.Context, userID uuid.UUID) ([]flashcard, error) {
-	rows, err := repository.db.Query(ctx, `
-		SELECT f.id, f.note_id, t.name, n.title, f.front_question,
-		       f.back_answer, f.memory_level, f.next_review_date::text
-		FROM flashcards f
-		JOIN notes n ON n.id = f.note_id
-		JOIN topics t ON t.id = f.topic_id
-		WHERE n.user_id = $1 AND f.next_review_date <= CURRENT_DATE
-		ORDER BY f.next_review_date, f.memory_level, f.id`, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	return scanFlashcards(rows)
-}
-
-func (repository *Repository) GradeReview(ctx context.Context, userID, cardID uuid.UUID, grade string) (int, int, error) {
-	tx, err := repository.db.Begin(ctx)
-	if err != nil {
-		return 0, 0, err
-	}
-	defer tx.Rollback(ctx)
-
-	var level int
-	err = tx.QueryRow(ctx, `
-		SELECT f.memory_level
-		FROM flashcards f
-		JOIN notes n ON n.id = f.note_id
-		WHERE f.id = $1 AND n.user_id = $2
-		FOR UPDATE OF f`, cardID, userID).Scan(&level)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	nextLevel := nextMemoryLevel(level, grade)
-	days := reviewIntervals[nextLevel-1]
-	command, err := tx.Exec(ctx, `
-		UPDATE flashcards f
-		SET memory_level = $1, next_review_date = CURRENT_DATE + $2::int
-		FROM notes n
-		WHERE f.id = $3 AND n.id = f.note_id AND n.user_id = $4`,
-		nextLevel, days, cardID, userID)
-	if err != nil {
-		return 0, 0, err
-	}
-	if command.RowsAffected() == 0 {
-		return 0, 0, pgx.ErrNoRows
-	}
-	if err := tx.Commit(ctx); err != nil {
-		return 0, 0, err
-	}
-	return nextLevel, days, nil
-}
-
-func (repository *Repository) LoadStats(ctx context.Context, userID uuid.UUID) (learningStats, error) {
-	var stats learningStats
-	err := repository.db.QueryRow(ctx, `
-		SELECT
-			(SELECT count(*) FROM notes WHERE user_id = $1),
-			(SELECT count(*) FROM flashcards f JOIN notes n ON n.id = f.note_id WHERE n.user_id = $1),
-			(SELECT count(*) FROM flashcards f JOIN notes n ON n.id = f.note_id WHERE n.user_id = $1 AND f.next_review_date <= CURRENT_DATE),
-			(SELECT count(*) FROM topics WHERE user_id = $1)`, userID,
-	).Scan(&stats.Notes, &stats.Cards, &stats.DueToday, &stats.TopicCount)
-	return stats, err
 }
 
 func scanNotes(rows pgx.Rows) ([]note, error) {

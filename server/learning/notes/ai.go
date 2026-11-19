@@ -1,4 +1,4 @@
-package learning
+package notes
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/YehudaBayana/second-brain/server/learning/models"
 	"google.golang.org/genai"
 )
 
@@ -88,7 +89,7 @@ type generatedNoteChat struct {
 	CodeExamples []string `json:"code_examples"`
 }
 
-func generateNoteChat(ctx context.Context, client *genai.Client, item note, history []noteChatMessage, message string) (generatedNoteChat, error) {
+func generateNoteChat(ctx context.Context, client *genai.Client, item models.Note, history []noteChatMessage, message string) (generatedNoteChat, error) {
 	if client == nil {
 		return generatedNoteChat{}, errors.New("Gemini client is not configured")
 	}
@@ -155,26 +156,4 @@ Latest user message:
 		return generatedNoteChat{}, errors.New("Gemini response is missing required chat content")
 	}
 	return reply, nil
-}
-
-func embedLearningText(ctx context.Context, client *genai.Client, content string) (string, error) {
-	if client == nil {
-		return "", errors.New("Gemini client is not configured")
-	}
-	const maxEmbeddingTextRunes = 8000
-	runes := []rune(content)
-	if len(runes) > maxEmbeddingTextRunes {
-		content = string(runes[:maxEmbeddingTextRunes])
-	}
-	result, err := client.Models.EmbedContent(ctx, "gemini-embedding-2",
-		[]*genai.Content{genai.NewContentFromText(content, genai.RoleUser)},
-		&genai.EmbedContentConfig{OutputDimensionality: genai.Ptr[int32](1536)},
-	)
-	if err != nil {
-		return "", err
-	}
-	if result == nil || len(result.Embeddings) == 0 {
-		return "", errors.New("Gemini returned no embedding")
-	}
-	return vectorString(result.Embeddings[0].Values)
 }
