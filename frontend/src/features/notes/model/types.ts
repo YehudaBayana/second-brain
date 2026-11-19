@@ -11,8 +11,8 @@ export type Note = {
   question: string;
   sourceText: string;
   explanation: string;
-  keyTakeaways: string[];
-  codeExamples: string[];
+  keyTakeaways?: string[];
+  codeExamples?: string[];
   sourceUrl: string | null;
   createdAt: string;
 };

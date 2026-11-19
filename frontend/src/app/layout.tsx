@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "@mantine/core/styles.css";
+import "@mantine/code-highlight/styles.css";
 import QueryProvider from "../providers/QueryProvider";
 import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";

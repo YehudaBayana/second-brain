@@ -18,7 +18,9 @@ func generateLesson(ctx context.Context, client *genai.Client, question, sourceT
 		return generatedLesson{}, errors.New("Gemini client is not configured")
 	}
 	prompt := fmt.Sprintf(`Teach the learner about the question below using the provided notes as context.
-Return a concise, accurate lesson, 2-4 key takeaways, code examples only when relevant, and 1-3 useful recall questions.
+Return a concise, accurate lesson, optional key takeaways and code examples when they add value, and 1-3 useful recall questions.
+Omit key_takeaways or code_examples entirely when there is no useful content for that section.
+For shell command examples, use plain multi-line Bash scripts without markdown fences; do not chain related commands onto one line.
 Do not invent details that are absent from the source; clearly distinguish general background knowledge from source claims.
 
 Question:
@@ -56,7 +58,7 @@ Source notes (may be empty):
 					},
 				},
 			},
-			Required: []string{"title", "explanation", "key_takeaways", "code_examples", "flashcards"},
+			Required: []string{"title", "explanation", "flashcards"},
 		},
 	})
 	if err != nil {
@@ -90,8 +92,8 @@ type generatedNoteChat struct {
 	UpdateNote   bool     `json:"update_note"`
 	Title        string   `json:"title"`
 	Explanation  string   `json:"explanation"`
-	KeyTakeaways []string `json:"key_takeaways"`
-	CodeExamples []string `json:"code_examples"`
+	KeyTakeaways []string `json:"key_takeaways,omitempty"`
+	CodeExamples []string `json:"code_examples,omitempty"`
 }
 
 func generateNoteChat(ctx context.Context, client *genai.Client, item models.Note, history []noteChatMessage, message string) (generatedNoteChat, error) {
@@ -113,7 +115,7 @@ func generateNoteChat(ctx context.Context, client *genai.Client, item models.Not
 	prompt := fmt.Sprintf(`You are a study assistant continuing a conversation about one saved note.
 Answer the user's latest message using the note and conversation as context. Be accurate and concise.
 Set update_note to true only when the discussion establishes useful, accurate content that should be added or corrected in the saved note. Otherwise set it to false.
-When update_note is true, return the complete revised note fields. Preserve existing useful content and do not invent facts. When false, return the current note fields unchanged.
+When update_note is true, return the complete revised note fields. Preserve existing useful content and do not invent facts. Include key_takeaways and code_examples only when they contain useful content; otherwise omit those fields. For shell command examples, use plain multi-line Bash scripts without markdown fences. When false, return the current note fields unchanged.
 
 Saved note:
 %s
@@ -140,7 +142,7 @@ Latest user message:
 				"key_takeaways": {Type: genai.TypeArray, Items: stringSchema},
 				"code_examples": {Type: genai.TypeArray, Items: stringSchema},
 			},
-			Required: []string{"answer", "update_note", "title", "explanation", "key_takeaways", "code_examples"},
+			Required: []string{"answer", "update_note", "title", "explanation"},
 		},
 	})
 	if err != nil {
@@ -157,7 +159,7 @@ Latest user message:
 	reply.Title = strings.TrimSpace(reply.Title)
 	reply.Explanation = strings.TrimSpace(reply.Explanation)
 	if reply.Answer == "" || (reply.UpdateNote &&
-		(reply.Title == "" || reply.Explanation == "" || reply.KeyTakeaways == nil || reply.CodeExamples == nil)) {
+		(reply.Title == "" || reply.Explanation == "")) {
 		return generatedNoteChat{}, errors.New("Gemini response is missing required chat content")
 	}
 	return reply, nil

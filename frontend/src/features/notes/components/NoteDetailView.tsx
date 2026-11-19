@@ -4,7 +4,6 @@ import {
   Alert,
   Badge,
   Button,
-  Code,
   Group,
   List,
   Paper,
@@ -13,6 +12,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import { CodeHighlight } from "@mantine/code-highlight";
 import Link from "next/link";
 import { ViewSkeleton } from "@/src/components/feedback/ViewSkeleton";
 import { NoteEntity } from "../model/NoteEntity";
@@ -47,6 +47,8 @@ export function NoteDetailView({ noteId }: { noteId: string }) {
   const { note: loadedNote, cards } = query.data;
   const note = loadedNote;
   const entity = NoteEntity.fromRaw(note);
+  const keyTakeaways = note.keyTakeaways ?? [];
+  const codeExamples = note.codeExamples ?? [];
 
   return (
     <Stack gap="xl">
@@ -81,28 +83,28 @@ export function NoteDetailView({ noteId }: { noteId: string }) {
             <Text>{note.explanation}</Text>
           </Stack>
 
-        {note.keyTakeaways.length > 0 ? (
+        {keyTakeaways.length > 0 ? (
           <Stack gap="sm">
             <Title order={3}>Key takeaways</Title>
             <List withPadding spacing="xs">
-              {note.keyTakeaways.map((item, index) => (
+              {keyTakeaways.map((item, index) => (
                 <List.Item key={`${index}-${item}`}>{item}</List.Item>
               ))}
             </List>
           </Stack>
         ) : null}
 
-        {note.codeExamples.length > 0 ? (
+        {codeExamples.length > 0 ? (
           <Stack gap="sm">
             <Title order={3}>Examples</Title>
-            {note.codeExamples.map((example, index) => (
-              <Code
-                block
-                p="md"
+            {codeExamples.map((example, index) => (
+              <CodeHighlight
+                code={example}
+                language="bash"
+                withLineNumbers
+                withBorder
                 key={`${index}-${example.slice(0, 24)}`}
-              >
-                {example}
-              </Code>
+              />
             ))}
           </Stack>
         ) : null}

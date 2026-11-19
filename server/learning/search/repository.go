@@ -65,11 +65,15 @@ func scanNotes(rows pgx.Rows) ([]note, error) {
 			&item.SourceText, &item.Explanation, &takeaways, &examples, &item.SourceURL, &item.CreatedAt); err != nil {
 			return nil, err
 		}
-		if err := json.Unmarshal(takeaways, &item.KeyTakeaways); err != nil {
-			return nil, err
+		if len(takeaways) > 0 {
+			if err := json.Unmarshal(takeaways, &item.KeyTakeaways); err != nil {
+				return nil, err
+			}
 		}
-		if err := json.Unmarshal(examples, &item.CodeExamples); err != nil {
-			return nil, err
+		if len(examples) > 0 {
+			if err := json.Unmarshal(examples, &item.CodeExamples); err != nil {
+				return nil, err
+			}
 		}
 		items = append(items, item)
 	}

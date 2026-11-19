@@ -14,8 +14,8 @@ type Note struct {
 	Question     string    `json:"question"`
 	SourceText   string    `json:"sourceText"`
 	Explanation  string    `json:"explanation"`
-	KeyTakeaways []string  `json:"keyTakeaways"`
-	CodeExamples []string  `json:"codeExamples"`
+	KeyTakeaways []string  `json:"keyTakeaways,omitempty"`
+	CodeExamples []string  `json:"codeExamples,omitempty"`
 	SourceURL    *string   `json:"sourceUrl"`
 	CreatedAt    time.Time `json:"createdAt"`
 }

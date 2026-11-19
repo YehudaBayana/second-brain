@@ -1,6 +1,5 @@
 import {
   Badge,
-  Code,
   Group,
   List,
   Paper,
@@ -9,6 +8,7 @@ import {
   ThemeIcon,
   Title,
 } from "@mantine/core";
+import { CodeHighlight } from "@mantine/code-highlight";
 import type { CreatedNote } from "../model/types";
 import { Icon } from "@/src/components/Icon";
 
@@ -17,6 +17,9 @@ export function CreatedNotePanel({
 }: {
   createdNote: CreatedNote;
 }) {
+  const keyTakeaways = createdNote.note.keyTakeaways ?? [];
+  const codeExamples = createdNote.note.codeExamples ?? [];
+
   return (
     <Paper>
       <Stack gap="md">
@@ -37,21 +40,21 @@ export function CreatedNotePanel({
           </Badge>
         </Group>
         <Text>{createdNote.note.explanation}</Text>
-        {createdNote.note.keyTakeaways.length > 0 ? (
+        {keyTakeaways.length > 0 ? (
           <List withPadding spacing="xs">
-            {createdNote.note.keyTakeaways.map((item, index) => (
+            {keyTakeaways.map((item, index) => (
               <List.Item key={`${index}-${item}`}>{item}</List.Item>
             ))}
           </List>
         ) : null}
-        {createdNote.note.codeExamples.map((example, index) => (
-          <Code
-            block
-            p="md"
+        {codeExamples.map((example, index) => (
+          <CodeHighlight
+            code={example}
+            language="bash"
+            withLineNumbers
+            withBorder
             key={`${index}-${example.slice(0, 24)}`}
-          >
-            {example}
-          </Code>
+          />
         ))}
         <Paper p="md" bg="gray.0">
           <Stack gap="xs">

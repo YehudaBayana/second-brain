@@ -79,11 +79,11 @@ func (repository *Repository) UpdateNoteFromChat(
 	reply generatedNoteChat,
 	embedding string,
 ) (note, error) {
-	takeawaysJSON, err := json.Marshal(reply.KeyTakeaways)
+	takeawaysJSON, err := marshalOptionalStrings(reply.KeyTakeaways)
 	if err != nil {
 		return note{}, err
 	}
-	examplesJSON, err := json.Marshal(reply.CodeExamples)
+	examplesJSON, err := marshalOptionalStrings(reply.CodeExamples)
 	if err != nil {
 		return note{}, err
 	}
@@ -96,16 +96,16 @@ func (repository *Repository) UpdateNoteFromChat(
 		    code_examples = $4::jsonb, embedding = $5::vector
 		WHERE id = $6 AND user_id = $7
 		RETURNING title, ai_explanation, key_takeaways, code_examples`,
-		reply.Title, reply.Explanation, string(takeawaysJSON), string(examplesJSON), embedding,
+		reply.Title, reply.Explanation, takeawaysJSON, examplesJSON, embedding,
 		noteID, userID,
 	).Scan(&item.Title, &item.Explanation, &takeaways, &examples)
 	if err != nil {
 		return note{}, err
 	}
-	if err := json.Unmarshal(takeaways, &item.KeyTakeaways); err != nil {
+	if err := unmarshalOptionalStrings(takeaways, &item.KeyTakeaways); err != nil {
 		return note{}, err
 	}
-	if err := json.Unmarshal(examples, &item.CodeExamples); err != nil {
+	if err := unmarshalOptionalStrings(examples, &item.CodeExamples); err != nil {
 		return note{}, err
 	}
 	return item, nil
@@ -152,11 +152,11 @@ func (repository *Repository) CreateNote(
 	if input.SourceURL != "" {
 		sourceURL = &input.SourceURL
 	}
-	takeawaysJSON, err := json.Marshal(lesson.KeyTakeaways)
+	takeawaysJSON, err := marshalOptionalStrings(lesson.KeyTakeaways)
 	if err != nil {
 		return note{}, nil, err
 	}
-	examplesJSON, err := json.Marshal(lesson.CodeExamples)
+	examplesJSON, err := marshalOptionalStrings(lesson.CodeExamples)
 	if err != nil {
 		return note{}, nil, err
 	}
@@ -168,7 +168,7 @@ func (repository *Repository) CreateNote(
 		VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9, $10::vector)
 		RETURNING id, created_at`,
 		userID, topicID, lesson.Title, input.Question, input.SourceText, lesson.Explanation,
-		string(takeawaysJSON), string(examplesJSON), sourceURL, embedding,
+		takeawaysJSON, examplesJSON, sourceURL, embedding,
 	).Scan(&saved.ID, &saved.CreatedAt)
 	if err != nil {
 		return note{}, nil, err
@@ -263,15 +263,34 @@ func scanNotes(rows pgx.Rows) ([]note, error) {
 			&item.SourceText, &item.Explanation, &takeaways, &examples, &item.SourceURL, &item.CreatedAt); err != nil {
 			return nil, err
 		}
-		if err := json.Unmarshal(takeaways, &item.KeyTakeaways); err != nil {
+		if err := unmarshalOptionalStrings(takeaways, &item.KeyTakeaways); err != nil {
 			return nil, err
 		}
-		if err := json.Unmarshal(examples, &item.CodeExamples); err != nil {
+		if err := unmarshalOptionalStrings(examples, &item.CodeExamples); err != nil {
 			return nil, err
 		}
 		notes = append(notes, item)
 	}
 	return notes, rows.Err()
+}
+
+func marshalOptionalStrings(values []string) (any, error) {
+	if values == nil {
+		return nil, nil
+	}
+	encoded, err := json.Marshal(values)
+	if err != nil {
+		return nil, err
+	}
+	return string(encoded), nil
+}
+
+func unmarshalOptionalStrings(data []byte, destination *[]string) error {
+	if len(data) == 0 {
+		*destination = nil
+		return nil
+	}
+	return json.Unmarshal(data, destination)
 }
 
 func scanFlashcards(rows pgx.Rows) ([]flashcard, error) {

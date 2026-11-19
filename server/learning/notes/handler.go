@@ -28,8 +28,8 @@ type noteDetail struct {
 type generatedLesson struct {
 	Title        string   `json:"title"`
 	Explanation  string   `json:"explanation"`
-	KeyTakeaways []string `json:"key_takeaways"`
-	CodeExamples []string `json:"code_examples"`
+	KeyTakeaways []string `json:"key_takeaways,omitempty"`
+	CodeExamples []string `json:"code_examples,omitempty"`
 	Flashcards   []aiCard `json:"flashcards"`
 }
 

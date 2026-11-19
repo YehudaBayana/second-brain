@@ -39,8 +39,8 @@ CREATE TABLE IF NOT EXISTS notes (
     question_asked text NOT NULL,
     source_text text NOT NULL DEFAULT '',
     ai_explanation text NOT NULL,
-    key_takeaways jsonb NOT NULL DEFAULT '[]'::jsonb,
-    code_examples jsonb NOT NULL DEFAULT '[]'::jsonb,
+    key_takeaways jsonb,
+    code_examples jsonb,
     source_url text,
     embedding vector(1536) NOT NULL,
     created_at timestamptz NOT NULL DEFAULT now()
