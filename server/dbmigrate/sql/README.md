@@ -1,5 +1,6 @@
-Add database changes as numbered SQL files in this directory, for example
-`001_add_note_tags.sql`. Use the next unused number for each migration and keep
-applied migration files unchanged and in the repository. Migrations are run in
-numeric order, in one transaction, when an authenticated user clicks **Run
-migrations** in the application header.
+The initial database schema is defined in `001_initial_schema.sql`. Add future
+database changes as numbered SQL files in this directory, using the next
+available number (for example, `003_add_note_tags.sql`). Keep applied migration
+files unchanged and in the repository. The API applies migrations in numeric
+order, in one transaction, at startup. The **Run migrations** action can also
+apply pending migrations while the API is running.

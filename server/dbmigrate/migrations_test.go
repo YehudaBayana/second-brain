@@ -32,6 +32,22 @@ func TestLoadMigrationsSortsByVersion(t *testing.T) {
 	}
 }
 
+func TestEmbeddedMigrationsStartWithInitialSchema(t *testing.T) {
+	migrations, err := loadMigrations(migrationFiles)
+	if err != nil {
+		t.Fatalf("loadMigrations() error = %v", err)
+	}
+	if len(migrations) != 2 {
+		t.Fatalf("loaded %d migrations, want 2", len(migrations))
+	}
+	if migrations[0].version != 1 || migrations[0].name != "001_initial_schema.sql" {
+		t.Errorf("first migration = (%d, %q), want (1, %q)", migrations[0].version, migrations[0].name, "001_initial_schema.sql")
+	}
+	if migrations[1].version != 2 || migrations[1].name != "002_optional_note_sections.sql" {
+		t.Errorf("second migration = (%d, %q), want (2, %q)", migrations[1].version, migrations[1].name, "002_optional_note_sections.sql")
+	}
+}
+
 func TestLoadMigrationsNormalizesCRLFLineEndings(t *testing.T) {
 	crlfData := []byte("SELECT 1;\r\nSELECT 2;\r\n")
 	lfData := []byte("SELECT 1;\nSELECT 2;\n")

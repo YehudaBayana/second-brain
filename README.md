@@ -13,16 +13,20 @@ A personal learning library: capture a question and your notes, turn them into a
 
 ### Configure
 
-Copy `.env.example` to `.env` and set `DATABASE_URL` and `GEMINI_API_KEY`. The API creates its base tables and enables the `vector` extension at startup, so the database role needs permission to install that extension. For deployment, set `ALLOWED_ORIGINS` to the frontend origin and `COOKIE_SECURE=true` when serving over HTTPS.
+Copy `.env.example` to `.env` and set `DATABASE_URL` and `GEMINI_API_KEY`. The database role needs permission to install the `vector` extension when applying the initial migration. For deployment, set `ALLOWED_ORIGINS` to the frontend origin and `COOKIE_SECURE=true` when serving over HTTPS.
 
 ### Database migrations
 
-Add incremental database changes as numbered SQL files in `server/dbmigrate/sql`,
-for example `001_add_note_tags.sql`. Use the next unused number, keep applied
-migration files unchanged, and deploy the API with the new file. While signed
-in, click **Run migrations** in the application header to apply pending files
-in numeric order. The base `schema.sql` remains the startup bootstrap for a
-new database; numbered migrations are not applied automatically.
+The full initial database schema is in `server/dbmigrate/sql/001_initial_schema.sql`.
+Add future changes as numbered SQL files in `server/dbmigrate/sql`, starting
+with the next available number. Keep applied migration files unchanged, and
+deploy the API with the new file. The API applies pending migrations in numeric
+order at startup. While signed in, **Run migrations** in the application header
+can also apply pending files. Migrations are the only source of schema changes.
+
+If you previously applied the old `001_optional_note_sections.sql` migration,
+recreate your development database before starting this version because the
+initial migration now takes version `001`.
 
 Copy `frontend/env.local.example` to `frontend/.env.local` if the API is not at `http://localhost:8080`.
 
