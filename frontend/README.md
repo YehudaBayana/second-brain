@@ -9,8 +9,9 @@ feature-specific state.
 - `src/app` contains route entry points and layouts. Keep route pages as Server
   Components and put interactive UI behind Client Component boundaries.
 - `src/features/<feature>` contains feature-owned components, hooks, query
-  definitions, API services, and models. Keep feature state here rather than
-  adding unrelated global state.
+  definitions, API services, models, and state. Organize logic by domain:
+  `notes`, `search`, `review`, `assistant`, `dashboard`, and `auth`. Keep
+  cross-feature logic out of a generic `learning` feature.
 - `src/domain` contains entities and business rules that should not depend on
   the UI.
 - `src/services` contains cross-feature infrastructure such as HTTP clients

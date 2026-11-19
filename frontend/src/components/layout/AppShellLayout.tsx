@@ -17,10 +17,10 @@ import { useDisclosure } from "@mantine/hooks";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { Icon, type IconName } from "@/src/features/learning/components/Icon";
-import { StudyAssistantPanel } from "@/src/features/learning/components/StudyAssistantPanel";
-import { StudyAssistantProvider } from "@/src/features/learning/components/StudyAssistantContext";
-import { useLearningStats } from "@/src/features/learning/query/useLearning";
+import { Icon, type IconName } from "@/src/components/Icon";
+import { StudyAssistantPanel } from "@/src/features/assistant/components/StudyAssistantPanel";
+import { StudyAssistantProvider } from "@/src/features/assistant/components/StudyAssistantContext";
+import { useLearningStats } from "@/src/features/dashboard/query/useDashboard";
 import { useAuth } from "@/src/features/auth/hooks/useAuth";
 import { RunMigrationsButton } from "@/src/features/database/components/RunMigrationsButton";
 

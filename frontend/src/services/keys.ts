@@ -38,11 +38,23 @@ export const folderKeys = {
   trash: () => [...folderKeys.all, "trash"] as const,
 };
 
-export const learningKeys = {
-  all: ["learning"] as const,
-  topics: () => [...learningKeys.all, "topics"] as const,
-  notes: () => [...learningKeys.all, "notes"] as const,
-  note: (noteId: string) => [...learningKeys.all, "note", noteId] as const,
-  dueCards: () => [...learningKeys.all, "due-cards"] as const,
-  stats: () => [...learningKeys.all, "stats"] as const,
+export const topicKeys = {
+  all: ["topics"] as const,
+  list: () => [...topicKeys.all, "list"] as const,
+};
+
+export const noteKeys = {
+  all: ["notes"] as const,
+  list: () => [...noteKeys.all, "list"] as const,
+  detail: (noteId: string) => [...noteKeys.all, "detail", noteId] as const,
+};
+
+export const reviewKeys = {
+  all: ["review"] as const,
+  dueCards: () => [...reviewKeys.all, "due-cards"] as const,
+};
+
+export const dashboardKeys = {
+  all: ["dashboard"] as const,
+  stats: () => [...dashboardKeys.all, "stats"] as const,
 };

@@ -1,5 +1,5 @@
-import { LearningViewSkeleton } from "@/src/components/feedback/LearningViewSkeleton";
+import { ViewSkeleton } from "@/src/components/feedback/ViewSkeleton";
 
 export default function Loading() {
-  return <LearningViewSkeleton view="overview" />;
+  return <ViewSkeleton view="overview" />;
 }

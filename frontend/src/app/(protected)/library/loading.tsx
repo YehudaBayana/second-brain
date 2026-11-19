@@ -1,5 +1,5 @@
-import { LearningViewSkeleton } from "@/src/components/feedback/LearningViewSkeleton";
+import { ViewSkeleton } from "@/src/components/feedback/ViewSkeleton";
 
 export default function LibraryLoading() {
-  return <LearningViewSkeleton view="library" />;
+  return <ViewSkeleton view="library" />;
 }

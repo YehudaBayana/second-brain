@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import { LearningViewSkeleton } from "@/src/components/feedback/LearningViewSkeleton";
-import { NoteDetailView } from "@/src/features/learning/components/NoteDetailView";
+import { ViewSkeleton } from "@/src/components/feedback/ViewSkeleton";
+import { NoteDetailView } from "@/src/features/notes/components/NoteDetailView";
 
 export default function NotePage({
   params,
@@ -8,7 +8,7 @@ export default function NotePage({
   params: Promise<{ noteId: string }>;
 }) {
   return (
-    <Suspense fallback={<LearningViewSkeleton view="library" />}>
+    <Suspense fallback={<ViewSkeleton view="library" />}>
       <NotePageContent params={params} />
     </Suspense>
   );
