@@ -17,12 +17,15 @@ Copy `.env.example` to `.env` and set `DATABASE_URL` and `GEMINI_API_KEY`. The d
 
 ### Database migrations
 
-The full initial database schema is in `server/dbmigrate/sql/001_initial_schema.sql`.
-Add future changes as numbered SQL files in `server/dbmigrate/sql`, starting
-with the next available number. Keep applied migration files unchanged, and
-deploy the API with the new file. The API applies pending migrations in numeric
-order at startup. While signed in, **Run migrations** in the application header
-can also apply pending files. Migrations are the only source of schema changes.
+The initial schema is in `server/dbmigrate/sql/001_initial_schema.up.sql`, with
+its rollback in `001_initial_schema.down.sql`. Add future changes as numbered
+`.up.sql`/`.down.sql` pairs in `server/dbmigrate/sql`, using the next available
+number, and keep applied migration files unchanged. A new database is
+bootstrapped with version 1; pending migrations on an existing database are
+never applied automatically at startup. While signed in, use the **Migrations**
+page to review migration history, apply pending changes, or roll back.
+Rolling back to version 0 deletes application tables and their data.
+Migrations are the only source of schema changes.
 
 If you previously applied the old `001_optional_note_sections.sql` migration,
 recreate your development database before starting this version because the

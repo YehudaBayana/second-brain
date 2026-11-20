@@ -12,9 +12,11 @@ import (
 
 func TestLoadMigrationsSortsByVersion(t *testing.T) {
 	files := fstest.MapFS{
-		"sql/002_add_cards.sql":    &fstest.MapFile{Data: []byte("SELECT 2;")},
-		"sql/001_create_notes.sql": &fstest.MapFile{Data: []byte("SELECT 1;")},
-		"sql/README.md":            &fstest.MapFile{Data: []byte("Migration instructions")},
+		"sql/002_add_cards.up.sql":      &fstest.MapFile{Data: []byte("SELECT 2;")},
+		"sql/001_create_notes.up.sql":   &fstest.MapFile{Data: []byte("SELECT 1;")},
+		"sql/002_add_cards.down.sql":    &fstest.MapFile{Data: []byte("SELECT 2;")},
+		"sql/001_create_notes.down.sql": &fstest.MapFile{Data: []byte("SELECT 1;")},
+		"sql/README.md":                 &fstest.MapFile{Data: []byte("Migration instructions")},
 	}
 
 	migrations, err := loadMigrations(files)
@@ -22,7 +24,7 @@ func TestLoadMigrationsSortsByVersion(t *testing.T) {
 		t.Fatalf("loadMigrations() error = %v", err)
 	}
 	if len(migrations) != 2 {
-		t.Fatalf("loaded %d migrations, want 2", len(migrations))
+		t.Fatalf("loaded %d migrations, want 2 (down files are not separate migrations)", len(migrations))
 	}
 	if migrations[0].version != 1 || migrations[0].name != "001_create_notes.sql" {
 		t.Errorf("first migration = (%d, %q), want (1, %q)", migrations[0].version, migrations[0].name, "001_create_notes.sql")
@@ -53,10 +55,12 @@ func TestLoadMigrationsNormalizesCRLFLineEndings(t *testing.T) {
 	lfData := []byte("SELECT 1;\nSELECT 2;\n")
 
 	filesCRLF := fstest.MapFS{
-		"sql/001_create_notes.sql": &fstest.MapFile{Data: crlfData},
+		"sql/001_create_notes.up.sql":   &fstest.MapFile{Data: crlfData},
+		"sql/001_create_notes.down.sql": &fstest.MapFile{Data: []byte("SELECT 1;")},
 	}
 	filesLF := fstest.MapFS{
-		"sql/001_create_notes.sql": &fstest.MapFile{Data: lfData},
+		"sql/001_create_notes.up.sql":   &fstest.MapFile{Data: lfData},
+		"sql/001_create_notes.down.sql": &fstest.MapFile{Data: []byte("SELECT 1;")},
 	}
 
 	migCRLF, err := loadMigrations(filesCRLF)
@@ -73,6 +77,16 @@ func TestLoadMigrationsNormalizesCRLFLineEndings(t *testing.T) {
 	}
 }
 
+func TestLoadMigrationsRequiresDownMigration(t *testing.T) {
+	files := fstest.MapFS{
+		"sql/001_create_notes.up.sql": &fstest.MapFile{Data: []byte("SELECT 1;")},
+	}
+
+	if _, err := loadMigrations(files); err == nil || !strings.Contains(err.Error(), "down migration") {
+		t.Fatalf("loadMigrations() error = %v, want missing down migration error", err)
+	}
+}
+
 func TestLoadMigrationsRejectsInvalidAndDuplicateVersions(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -81,20 +95,26 @@ func TestLoadMigrationsRejectsInvalidAndDuplicateVersions(t *testing.T) {
 		{
 			name: "invalid filename",
 			files: fstest.MapFS{
-				"sql/add_notes.sql": &fstest.MapFile{Data: []byte("SELECT 1;")},
+				"sql/add_notes.up.sql": &fstest.MapFile{Data: []byte("SELECT 1;")},
+			},
+		},
+		{
+			name: "missing direction suffix",
+			files: fstest.MapFS{
+				"sql/001_add_notes.sql": &fstest.MapFile{Data: []byte("SELECT 1;")},
 			},
 		},
 		{
 			name: "duplicate version",
 			files: fstest.MapFS{
-				"sql/001_add_notes.sql":  &fstest.MapFile{Data: []byte("SELECT 1;")},
-				"sql/001_add_topics.sql": &fstest.MapFile{Data: []byte("SELECT 2;")},
+				"sql/001_add_notes.up.sql":  &fstest.MapFile{Data: []byte("SELECT 1;")},
+				"sql/001_add_topics.up.sql": &fstest.MapFile{Data: []byte("SELECT 2;")},
 			},
 		},
 		{
 			name: "empty migration",
 			files: fstest.MapFS{
-				"sql/001_add_notes.sql": &fstest.MapFile{Data: []byte(" \n")},
+				"sql/001_add_notes.up.sql": &fstest.MapFile{Data: []byte(" \n")},
 			},
 		},
 	}
@@ -229,5 +249,20 @@ func TestHandlerApplyWithoutDB(t *testing.T) {
 	body := rec.Body.String()
 	if !strings.Contains(body, "migration_failed") {
 		t.Errorf("response body %q does not contain migration_failed", body)
+	}
+}
+
+func TestHandlerRollbackRequiresTargetVersion(t *testing.T) {
+	handler := NewHandler(nil)
+	req := httptest.NewRequest(http.MethodPost, "/api/migrations/rollback", strings.NewReader(`{}`))
+	rec := httptest.NewRecorder()
+
+	handler.Rollback(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("status code = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+	if !strings.Contains(rec.Body.String(), "target_version") {
+		t.Errorf("response body %q does not mention target_version", rec.Body.String())
 	}
 }

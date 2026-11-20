@@ -17,9 +17,9 @@ func ConnectDatabase(ctx context.Context, databaseURL string) (*pgxpool.Pool, er
 		db.Close()
 		return nil, fmt.Errorf("connect to database: %w", err)
 	}
-	if _, err := dbmigrate.NewHandler(db).ApplyMigrations(ctx); err != nil {
+	if _, err := dbmigrate.NewHandler(db).BootstrapMigrations(ctx); err != nil {
 		db.Close()
-		return nil, fmt.Errorf("apply database migrations: %w", err)
+		return nil, fmt.Errorf("bootstrap database schema: %w", err)
 	}
 	return db, nil
 }

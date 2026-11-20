@@ -22,7 +22,6 @@ import { StudyAssistantPanel } from "@/src/features/assistant/components/StudyAs
 import { StudyAssistantProvider } from "@/src/features/assistant/components/StudyAssistantContext";
 import { useLearningStats } from "@/src/features/dashboard/query/useDashboard";
 import { useAuth } from "@/src/features/auth/hooks/useAuth";
-import { RunMigrationsButton } from "@/src/features/database/components/RunMigrationsButton";
 
 interface NavItem {
   href: string;
@@ -41,6 +40,7 @@ const navItems: NavItem[] = [
     badgeKey: "dueToday",
   },
   { href: "/search", label: "Search", icon: "search" },
+  { href: "/migrations", label: "Migrations", icon: "database" },
 ];
 
 const routeLabels: Record<string, string> = {
@@ -48,6 +48,7 @@ const routeLabels: Record<string, string> = {
   "/library": "My library",
   "/review": "Review cards",
   "/search": "Search",
+  "/migrations": "Migrations",
 };
 
 interface AppShellLayoutProps {
@@ -133,7 +134,6 @@ export function AppShellLayout({
                 }).format(new Date(currentDate))}
               </Text>
             ) : null}
-            <RunMigrationsButton />
             <Button onClick={resize.resetAll} variant="default" size="xs">
               Reset layout
             </Button>

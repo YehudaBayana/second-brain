@@ -58,3 +58,8 @@ export const dashboardKeys = {
   all: ["dashboard"] as const,
   stats: () => [...dashboardKeys.all, "stats"] as const,
 };
+
+export const migrationKeys = {
+  all: ["migrations"] as const,
+  history: () => [...migrationKeys.all, "history"] as const,
+};
