@@ -11,5 +11,6 @@ func Init(handlers *app.Handlers) *http.ServeMux {
 	handlers.Auth.RegisterRoutes(mux, handlers.Protected, handlers.ProtectedWrite)
 	handlers.Migrations.RegisterRoutes(mux, handlers.Protected, handlers.ProtectedWrite)
 	handlers.Learning.RegisterRoutes(mux, handlers.Protected, handlers.ProtectedWrite)
+	handlers.DbBrowser.RegisterRoutes(mux, handlers.Protected, handlers.ProtectedWrite)
 	return mux
 }

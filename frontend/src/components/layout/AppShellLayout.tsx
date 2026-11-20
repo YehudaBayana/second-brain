@@ -37,6 +37,7 @@ const navItems: NavItem[] = [
   },
   { href: "/search", label: "Search", icon: "search" },
   { href: "/migrations", label: "Migrations", icon: "database" },
+  { href: "/database", label: "DB", icon: "database" },
 ];
 
 const routeLabels: Record<string, string> = {

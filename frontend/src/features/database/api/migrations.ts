@@ -37,7 +37,9 @@ export function runMigrations(): Promise<MigrationResult> {
   return apiClient<MigrationResult>("/api/migrations", { method: "POST" });
 }
 
-export function rollbackMigrations(targetVersion: number): Promise<RollbackResult> {
+export function rollbackMigrations(
+  targetVersion: number,
+): Promise<RollbackResult> {
   return apiClient<RollbackResult>("/api/migrations/rollback", {
     method: "POST",
     body: JSON.stringify({ target_version: targetVersion }),
