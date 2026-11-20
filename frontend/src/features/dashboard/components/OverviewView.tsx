@@ -13,10 +13,9 @@ import {
 import Link from "next/link";
 import { Icon } from "@/src/components/Icon";
 import { NoteCard } from "@/src/features/notes/components/NoteCard";
-import { ReviewPrompt } from "@/src/features/review/components/ReviewPrompt";
 import { useDashboard } from "@/src/features/dashboard/hooks/useDashboard";
-import { useOpenStudyAssistant } from "@/src/features/assistant/components/StudyAssistantContext";
 import { ViewSkeleton } from "@/src/components/feedback/ViewSkeleton";
+import { FlashcardUploadForm } from "../../review/components/FlashcardUploadForm";
 
 function StatCard({
   icon,
@@ -36,9 +35,15 @@ function StatCard({
           <Icon name={icon} />
         </ThemeIcon>
         <Stack gap={4}>
-          <Text size="sm" c="dimmed">{label}</Text>
-          <Text size="xl" fw={700} lh={1}>{value}</Text>
-          <Text size="xs" c="dimmed">{description}</Text>
+          <Text size="sm" c="dimmed">
+            {label}
+          </Text>
+          <Text size="xl" fw={700} lh={1}>
+            {value}
+          </Text>
+          <Text size="xs" c="dimmed">
+            {description}
+          </Text>
         </Stack>
       </Group>
     </Paper>
@@ -51,7 +56,6 @@ function StatCard({
  */
 export function OverviewView() {
   const { greetingName, notes, stats, isLoading } = useDashboard();
-  const openStudyAssistant = useOpenStudyAssistant();
 
   if (isLoading) {
     return <ViewSkeleton view="overview" />;
@@ -79,7 +83,11 @@ export function OverviewView() {
         </Button>
       </Group>
 
-      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md" aria-label="Learning overview">
+      <SimpleGrid
+        cols={{ base: 1, sm: 3 }}
+        spacing="md"
+        aria-label="Learning overview"
+      >
         <StatCard
           icon="book"
           label="Saved notes"
@@ -102,10 +110,7 @@ export function OverviewView() {
         />
       </SimpleGrid>
 
-      <ReviewPrompt
-        dueToday={stats.dueToday}
-        onSaveIdea={openStudyAssistant}
-      />
+      <FlashcardUploadForm />
 
       {notes.length > 0 ? (
         <Stack gap="md">

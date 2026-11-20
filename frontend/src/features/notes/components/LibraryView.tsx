@@ -29,7 +29,12 @@ export function LibraryView() {
   const statsQuery = useLearningStats();
   const notes = notesQuery.data ?? [];
   const topics = topicsQuery.data ?? [];
-  const stats = statsQuery.data ?? { notes: 0, cards: 0, dueToday: 0, topics: 0 };
+  const stats = statsQuery.data ?? {
+    notes: 0,
+    cards: 0,
+    dueToday: 0,
+    topics: 0,
+  };
   const isLoading =
     notesQuery.isPending || topicsQuery.isPending || statsQuery.isPending;
 
@@ -44,7 +49,7 @@ export function LibraryView() {
           <Text size="xs" fw={700} tt="uppercase" c="indigo.7">
             Your personal knowledge base
           </Text>
-          <Title order={1}>My library</Title>
+          <Title order={1}>All notes</Title>
           <Text c="dimmed">
             {stats.notes} notes across {topics.length} topics. Keep the ideas
             you’ll want to find again.
@@ -72,13 +77,12 @@ export function LibraryView() {
               <Icon name="book" size={22} />
             </ThemeIcon>
             <Title order={3}>Your library is ready for its first idea.</Title>
-            <Text c="dimmed">Start with a question or something you just learned.</Text>
-          <Button
-            component={Link}
-            href="/"
-          >
-            Create your first note
-          </Button>
+            <Text c="dimmed">
+              Start with a question or something you just learned.
+            </Text>
+            <Button component={Link} href="/">
+              Create your first note
+            </Button>
           </Stack>
         </Paper>
       )}

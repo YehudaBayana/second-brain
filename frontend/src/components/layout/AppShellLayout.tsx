@@ -4,11 +4,9 @@ import {
   Anchor,
   AppShell,
   Avatar,
-  Badge,
   Burger,
   Button,
   Group,
-  NavLink,
   Stack,
   Text,
   useAppShellResize,
@@ -17,27 +15,25 @@ import { useDisclosure } from "@mantine/hooks";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { Icon, type IconName } from "@/src/components/Icon";
+import { Icon } from "@/src/components/Icon";
 import { StudyAssistantPanel } from "@/src/features/assistant/components/StudyAssistantPanel";
 import { StudyAssistantProvider } from "@/src/features/assistant/components/StudyAssistantContext";
 import { useLearningStats } from "@/src/features/dashboard/query/useDashboard";
 import { useAuth } from "@/src/features/auth/hooks/useAuth";
-
-interface NavItem {
-  href: string;
-  label: string;
-  icon: IconName;
-  badgeKey?: "dueToday";
-}
+import NavMenuItem, { NavItem } from "./NavMenuItem";
 
 const navItems: NavItem[] = [
   { href: "/", label: "Overview", icon: "home" },
-  { href: "/library", label: "My library", icon: "library" },
+  { href: "/library", label: "Notes", icon: "library" },
   {
     href: "/review",
     label: "Review cards",
     icon: "cards",
     badgeKey: "dueToday",
+    children: [
+      { href: "/review?status=pending", label: "Pending flashcards" },
+      { href: "/review?status=all", label: "All flashcards" },
+    ],
   },
   { href: "/search", label: "Search", icon: "search" },
   { href: "/migrations", label: "Migrations", icon: "database" },
@@ -45,8 +41,10 @@ const navItems: NavItem[] = [
 
 const routeLabels: Record<string, string> = {
   "/": "Overview",
-  "/library": "My library",
+  "/library": "notes",
   "/review": "Review cards",
+  "/review?status=pending": "Pending flashcards",
+  "/review?status=all": "All flashcards",
   "/search": "Search",
   "/migrations": "Migrations",
 };
@@ -58,10 +56,10 @@ interface AppShellLayoutProps {
 }
 
 /**
- * AppShellLayout
- * Core application shell providing layout, navigation, dynamic breadcrumbs,
- * and user profile info. Uses Next.js native routing and usePathname()
- * to eliminate props drilling and conditional rendering.
+- AppShellLayout
+- Core application shell providing layout, navigation, dynamic breadcrumbs,
+- and user profile info. Uses Next.js native routing and usePathname()
+- to eliminate props drilling and conditional rendering.
  */
 export function AppShellLayout({
   children,
@@ -88,11 +86,6 @@ export function AppShellLayout({
       ([route]) => route !== "/" && pathname.startsWith(route),
     )?.[1] ??
     "Workspace";
-
-  const isActive = (href: string) => {
-    if (href === "/") return pathname === "/";
-    return pathname.startsWith(href);
-  };
 
   return (
     <AppShell
@@ -177,24 +170,12 @@ export function AppShellLayout({
           </Text>
 
           <Stack component="nav" gap={4} aria-label="Main navigation">
-            {navItems.map(({ href, label, icon, badgeKey }) => (
-              <NavLink
-                component={Link}
-                key={href}
-                href={href}
-                label={label}
-                leftSection={<Icon name={icon} size={18} />}
-                rightSection={
-                  badgeKey === "dueToday" && dueToday > 0 ? (
-                    <Badge size="sm" variant="light" color="indigo">
-                      {dueToday}
-                    </Badge>
-                  ) : null
-                }
-                active={isActive(href)}
-                variant="light"
-                color="indigo"
-                aria-current={isActive(href) ? "page" : undefined}
+            {navItems.map((item) => (
+              <NavMenuItem
+                key={item.href}
+                item={item}
+                pathname={pathname}
+                dueToday={dueToday}
               />
             ))}
           </Stack>
