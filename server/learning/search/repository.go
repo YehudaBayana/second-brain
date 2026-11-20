@@ -43,8 +43,8 @@ func (repository *Repository) SearchNotes(ctx context.Context, userID uuid.UUID,
 			       COALESCE(1.0 / (60 + v.rank), 0.0) + COALESCE(1.0 / (60 + t.rank), 0.0) AS score
 			FROM vector_hits v FULL OUTER JOIN text_hits t ON t.id = v.id
 		)
-		SELECT n.id, n.topic_id, topics.name, n.title, n.question_asked, n.source_text,
-		       n.ai_explanation, n.key_takeaways, n.code_examples, n.source_url, n.created_at
+		SELECT n.id, n.topic_id, topics.name, n.title, n.question_asked,
+		       n.ai_explanation, n.key_takeaways, n.code_examples, n.created_at
 		FROM ranks JOIN notes n ON n.id = ranks.id
 		JOIN topics ON topics.id = n.topic_id
 		WHERE n.user_id = $2
@@ -62,7 +62,7 @@ func scanNotes(rows pgx.Rows) ([]note, error) {
 		var item note
 		var takeaways, examples []byte
 		if err := rows.Scan(&item.ID, &item.TopicID, &item.TopicName, &item.Title, &item.Question,
-			&item.SourceText, &item.Explanation, &takeaways, &examples, &item.SourceURL, &item.CreatedAt); err != nil {
+			&item.Explanation, &takeaways, &examples, &item.CreatedAt); err != nil {
 			return nil, err
 		}
 		if len(takeaways) > 0 {

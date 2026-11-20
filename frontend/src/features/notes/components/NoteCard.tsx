@@ -2,7 +2,6 @@ import { Anchor, Badge, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import Link from "next/link";
 import type { Note } from "../model/types";
 import { NoteEntity } from "../model/NoteEntity";
-import { Icon } from "@/src/components/Icon";
 import {
   ContextMenuItem,
   ContextMenuWrapper,
@@ -77,16 +76,6 @@ export function NoteCard({ note: rawNote }: { note: Note | NoteEntity }) {
             <Text size="xs" c="dimmed">
               {note.takeawaysCount} key ideas
             </Text>
-            {note.hasSourceUrl && note.sourceUrl ? (
-              <Anchor
-                href={note.sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                size="xs"
-              >
-                Open source <Icon name="arrow" size={14} />
-              </Anchor>
-            ) : null}
           </Group>
         </Stack>
       </Paper>

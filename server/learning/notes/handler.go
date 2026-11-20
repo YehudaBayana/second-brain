@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -41,8 +40,6 @@ type aiCard struct {
 type createNoteRequest struct {
 	TopicID    string `json:"topic_id"`
 	Question   string `json:"question"`
-	SourceText string `json:"source_text"`
-	SourceURL  string `json:"source_url"`
 	SaveToDeck bool   `json:"save_to_deck"`
 }
 
@@ -193,7 +190,7 @@ func (api *API) HandleNoteChat(w http.ResponseWriter, r *http.Request) {
 
 	if reply.UpdateNote {
 		embeddingText := strings.Join([]string{
-			item.Title, item.Question, item.SourceText, reply.Title, reply.Explanation,
+			item.Title, item.Question, reply.Title, reply.Explanation,
 			strings.Join(reply.KeyTakeaways, "\n"), strings.Join(reply.CodeExamples, "\n"),
 		}, "\n")
 		embeddingContext, cancelEmbedding := context.WithTimeout(r.Context(), 30*time.Second)
@@ -230,18 +227,8 @@ func (api *API) handleCreateNote(w http.ResponseWriter, r *http.Request, userID 
 	}
 
 	input.Question = strings.TrimSpace(input.Question)
-	input.SourceText = strings.TrimSpace(input.SourceText)
-	input.SourceURL = strings.TrimSpace(input.SourceURL)
 	if input.Question == "" || len(input.Question) > maxQuestionLength {
 		httpapi.WriteError(w, http.StatusUnprocessableEntity, "add a question or topic (up to 500 characters)")
-		return
-	}
-	if len(input.SourceText) > maxSourceText {
-		httpapi.WriteError(w, http.StatusUnprocessableEntity, "source text must be 30,000 characters or fewer")
-		return
-	}
-	if len(input.SourceURL) > maxSourceURL || !validSourceURL(input.SourceURL) {
-		httpapi.WriteError(w, http.StatusUnprocessableEntity, "source URL must be a valid http or https address")
 		return
 	}
 	topicID, err := uuid.Parse(input.TopicID)
@@ -262,7 +249,7 @@ func (api *API) handleCreateNote(w http.ResponseWriter, r *http.Request, userID 
 
 	generationContext, cancelGeneration := context.WithTimeout(r.Context(), config.GeminiGenerationContextTimeout)
 	defer cancelGeneration()
-	lesson, err := generateLesson(generationContext, api.ai, input.Question, input.SourceText)
+	lesson, err := generateLesson(generationContext, api.ai, input.Question)
 	if err != nil {
 		log.Printf("Generate lesson: %v", err)
 		if api.ai == nil {
@@ -276,7 +263,6 @@ func (api *API) handleCreateNote(w http.ResponseWriter, r *http.Request, userID 
 	embeddingText := strings.Join([]string{
 		lesson.Title,
 		input.Question,
-		input.SourceText,
 		lesson.Explanation,
 		strings.Join(lesson.KeyTakeaways, "\n"),
 	}, "\n")
@@ -315,12 +301,4 @@ func (api *API) handleCreateNote(w http.ResponseWriter, r *http.Request, userID 
 		"note": saved, "title": lesson.Title, "cards": savedCards,
 		"relatedNotes": related,
 	})
-}
-
-func validSourceURL(raw string) bool {
-	if raw == "" {
-		return true
-	}
-	parsed, err := url.ParseRequestURI(raw)
-	return err == nil && (parsed.Scheme == "http" || parsed.Scheme == "https") && parsed.Host != ""
 }

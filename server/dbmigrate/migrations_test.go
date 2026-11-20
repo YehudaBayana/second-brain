@@ -39,14 +39,17 @@ func TestEmbeddedMigrationsStartWithInitialSchema(t *testing.T) {
 	if err != nil {
 		t.Fatalf("loadMigrations() error = %v", err)
 	}
-	if len(migrations) != 2 {
-		t.Fatalf("loaded %d migrations, want 2", len(migrations))
+	if len(migrations) != 3 {
+		t.Fatalf("loaded %d migrations, want 3", len(migrations))
 	}
 	if migrations[0].version != 1 || migrations[0].name != "001_initial_schema.sql" {
 		t.Errorf("first migration = (%d, %q), want (1, %q)", migrations[0].version, migrations[0].name, "001_initial_schema.sql")
 	}
 	if migrations[1].version != 2 || migrations[1].name != "002_optional_note_sections.sql" {
 		t.Errorf("second migration = (%d, %q), want (2, %q)", migrations[1].version, migrations[1].name, "002_optional_note_sections.sql")
+	}
+	if migrations[2].version != 3 || migrations[2].name != "003_drop_note_sources.sql" {
+		t.Errorf("third migration = (%d, %q), want (3, %q)", migrations[2].version, migrations[2].name, "003_drop_note_sources.sql")
 	}
 }
 

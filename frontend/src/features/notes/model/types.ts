@@ -1,3 +1,5 @@
+import { Flashcard } from "@/src/features/review/model/types";
+
 export type Topic = {
   id: string;
   name: string;
@@ -9,11 +11,9 @@ export type Note = {
   topicName: string;
   title: string;
   question: string;
-  sourceText: string;
   explanation: string;
   keyTakeaways?: string[];
   codeExamples?: string[];
-  sourceUrl: string | null;
   createdAt: string;
 };
 
@@ -27,15 +27,13 @@ export type RelatedNote = {
 export type CreatedNote = {
   note: Note;
   title: string;
-  cards: import("@/src/features/review/model/types").Flashcard[];
+  cards: Flashcard[];
   relatedNotes: RelatedNote[];
 };
 
 export type CreateNoteInput = {
   topic_id: string;
   question: string;
-  source_text: string;
-  source_url: string;
   save_to_deck: boolean;
 };
 

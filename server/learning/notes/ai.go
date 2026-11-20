@@ -13,21 +13,18 @@ import (
 	"google.golang.org/genai"
 )
 
-func generateLesson(ctx context.Context, client *genai.Client, question, sourceText string) (generatedLesson, error) {
+func generateLesson(ctx context.Context, client *genai.Client, question string) (generatedLesson, error) {
 	if client == nil {
 		return generatedLesson{}, errors.New("Gemini client is not configured")
 	}
-	prompt := fmt.Sprintf(`Teach the learner about the question below using the provided notes as context.
+	prompt := fmt.Sprintf(`Teach the learner about the question below using accurate general knowledge.
 Return a concise, accurate lesson, optional key takeaways and code examples when they add value, and 1-3 useful recall questions.
 Omit key_takeaways or code_examples entirely when there is no useful content for that section.
 For shell command examples, use plain multi-line Bash scripts without markdown fences; do not chain related commands onto one line.
-Do not invent details that are absent from the source; clearly distinguish general background knowledge from source claims.
+Do not present unsupported details as facts.
 
 Question:
-%s
-
-Source notes (may be empty):
-%s`, question, sourceText)
+%s`, question)
 
 	// this fetch the exact live list of models enabled for my API key
 	// models,err := client.Models.List(ctx, &genai.ListModelsConfig{});
@@ -101,7 +98,7 @@ func generateNoteChat(ctx context.Context, client *genai.Client, item models.Not
 		return generatedNoteChat{}, errors.New("Gemini client is not configured")
 	}
 	noteJSON, err := json.Marshal(map[string]any{
-		"title": item.Title, "question": item.Question, "source_text": item.SourceText,
+		"title": item.Title, "question": item.Question,
 		"explanation": item.Explanation, "key_takeaways": item.KeyTakeaways,
 		"code_examples": item.CodeExamples,
 	})

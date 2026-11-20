@@ -109,27 +109,6 @@ export function NoteDetailView({ noteId }: { noteId: string }) {
           </Stack>
         ) : null}
 
-        <Stack gap="sm">
-          <Title order={3}>Source material</Title>
-          {note.sourceText ? (
-            <Text c="dimmed">{note.sourceText}</Text>
-          ) : (
-            <Text c="dimmed">No source text was added.</Text>
-          )}
-          {note.sourceUrl ? (
-            <Button
-              component="a"
-              href={note.sourceUrl}
-              target="_blank"
-              rel="noreferrer"
-              variant="default"
-              rightSection={<Icon name="arrow" size={14} />}
-            >
-              Open source
-            </Button>
-          ) : null}
-        </Stack>
-
         {cards.length > 0 ? (
           <Stack gap="sm">
             <Title order={3}>Review cards</Title>

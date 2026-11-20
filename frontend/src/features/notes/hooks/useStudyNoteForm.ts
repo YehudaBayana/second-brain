@@ -19,15 +19,11 @@ export function useStudyNoteForm() {
   const {
     topicId,
     question,
-    sourceText,
-    sourceUrl,
     saveToDeck,
     createdNote,
     formError,
     setTopicId,
     setQuestion,
-    setSourceText,
-    setSourceUrl,
     setSaveToDeck,
     setCreatedNote,
     setFormError,
@@ -60,8 +56,6 @@ export function useStudyNoteForm() {
       const result = await createNoteMutation.mutateAsync({
         topic_id: selectedTopicId,
         question: question.trim(),
-        source_text: sourceText.trim(),
-        source_url: sourceUrl.trim(),
         save_to_deck: saveToDeck,
       });
 
@@ -82,8 +76,6 @@ export function useStudyNoteForm() {
     topics,
     topicId: selectedTopicId,
     question,
-    sourceText,
-    sourceUrl,
     saveToDeck,
     createdNote,
     formError,
@@ -95,8 +87,6 @@ export function useStudyNoteForm() {
       !selectedTopicId,
     setTopicId,
     setQuestion,
-    setSourceText,
-    setSourceUrl,
     setSaveToDeck,
     clearError: () => setFormError(null),
     dismissCreatedNote: () => setCreatedNote(null),

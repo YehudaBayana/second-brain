@@ -12,8 +12,8 @@ import (
 
 func (repository *Repository) ListNotes(ctx context.Context, userID uuid.UUID) ([]note, error) {
 	rows, err := repository.db.Query(ctx, `
-		SELECT n.id, n.topic_id, t.name, n.title, n.question_asked, n.source_text,
-		       n.ai_explanation, n.key_takeaways, n.code_examples, n.source_url, n.created_at
+		SELECT n.id, n.topic_id, t.name, n.title, n.question_asked,
+		       n.ai_explanation, n.key_takeaways, n.code_examples, n.created_at
 		FROM notes n
 		JOIN topics t ON t.id = n.topic_id
 		WHERE n.user_id = $1
@@ -30,13 +30,13 @@ func (repository *Repository) GetNote(ctx context.Context, userID, noteID uuid.U
 	var item note
 	var takeaways, examples []byte
 	err := repository.db.QueryRow(ctx, `
-		SELECT n.id, n.topic_id, t.name, n.title, n.question_asked, n.source_text,
-		       n.ai_explanation, n.key_takeaways, n.code_examples, n.source_url, n.created_at
+		SELECT n.id, n.topic_id, t.name, n.title, n.question_asked,
+		       n.ai_explanation, n.key_takeaways, n.code_examples, n.created_at
 		FROM notes n
 		JOIN topics t ON t.id = n.topic_id
 		WHERE n.id = $1 AND n.user_id = $2`, noteID, userID,
 	).Scan(&item.ID, &item.TopicID, &item.TopicName, &item.Title, &item.Question,
-		&item.SourceText, &item.Explanation, &takeaways, &examples, &item.SourceURL, &item.CreatedAt)
+		&item.Explanation, &takeaways, &examples, &item.CreatedAt)
 	if err != nil {
 		return note{}, err
 	}
@@ -148,10 +148,6 @@ func (repository *Repository) CreateNote(
 	defer tx.Rollback(ctx)
 
 	var saved note
-	var sourceURL *string
-	if input.SourceURL != "" {
-		sourceURL = &input.SourceURL
-	}
 	takeawaysJSON, err := marshalOptionalStrings(lesson.KeyTakeaways)
 	if err != nil {
 		return note{}, nil, err
@@ -162,13 +158,13 @@ func (repository *Repository) CreateNote(
 	}
 	err = tx.QueryRow(ctx, `
 		INSERT INTO notes (
-			user_id, topic_id, title, question_asked, source_text, ai_explanation,
-			key_takeaways, code_examples, source_url, embedding
+			user_id, topic_id, title, question_asked, ai_explanation,
+			key_takeaways, code_examples, embedding
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9, $10::vector)
+		VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8::vector)
 		RETURNING id, created_at`,
-		userID, topicID, lesson.Title, input.Question, input.SourceText, lesson.Explanation,
-		takeawaysJSON, examplesJSON, sourceURL, embedding,
+		userID, topicID, lesson.Title, input.Question, lesson.Explanation,
+		takeawaysJSON, examplesJSON, embedding,
 	).Scan(&saved.ID, &saved.CreatedAt)
 	if err != nil {
 		return note{}, nil, err
@@ -178,11 +174,9 @@ func (repository *Repository) CreateNote(
 	saved.TopicName = topicName
 	saved.Title = lesson.Title
 	saved.Question = input.Question
-	saved.SourceText = input.SourceText
 	saved.Explanation = lesson.Explanation
 	saved.KeyTakeaways = lesson.KeyTakeaways
 	saved.CodeExamples = lesson.CodeExamples
-	saved.SourceURL = sourceURL
 
 	savedCards := make([]flashcard, 0)
 	if input.SaveToDeck {
@@ -260,7 +254,7 @@ func scanNotes(rows pgx.Rows) ([]note, error) {
 		var item note
 		var takeaways, examples []byte
 		if err := rows.Scan(&item.ID, &item.TopicID, &item.TopicName, &item.Title, &item.Question,
-			&item.SourceText, &item.Explanation, &takeaways, &examples, &item.SourceURL, &item.CreatedAt); err != nil {
+			&item.Explanation, &takeaways, &examples, &item.CreatedAt); err != nil {
 			return nil, err
 		}
 		if err := unmarshalOptionalStrings(takeaways, &item.KeyTakeaways); err != nil {
