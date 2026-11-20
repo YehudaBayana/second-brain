@@ -1,6 +1,6 @@
 "use client";
 
-import { useDueCards, useGradeCard } from "../query/useReview";
+import { useGetDueCards, useGradeCard } from "../query/useReview";
 import { useLearningStats } from "@/src/features/dashboard/query/useDashboard";
 import { useReviewSessionStore } from "../store/useReviewSessionStore";
 import type { ReviewGrade } from "../model/types";
@@ -11,7 +11,7 @@ import type { ReviewGrade } from "../model/types";
  * grading mutations, and error handling.
  */
 export function useFlashcardReview() {
-  const dueCardsQuery = useDueCards();
+  const dueCardsQuery = useGetDueCards();
   const statsQuery = useLearningStats();
   const gradeMutation = useGradeCard();
 
@@ -36,9 +36,7 @@ export function useFlashcardReview() {
       conceal();
     } catch (cause) {
       setSessionError(
-        cause instanceof Error
-          ? cause.message
-          : "Could not save your review.",
+        cause instanceof Error ? cause.message : "Could not save your review.",
       );
     }
   };

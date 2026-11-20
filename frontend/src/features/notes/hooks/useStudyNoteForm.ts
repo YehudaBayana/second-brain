@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, type FormEvent } from "react";
-import { useTopics, useCreateNote } from "../query/useNotes";
+import { useGetTopics, useCreateNote } from "../query/useNotes";
 import { useStudyNoteDraftStore } from "../store/useStudyNoteDraftStore";
 
 /**
@@ -11,7 +11,7 @@ import { useStudyNoteDraftStore } from "../store/useStudyNoteDraftStore";
  * Keeps React component files 100% free of local useState clutter.
  */
 export function useStudyNoteForm() {
-  const topicsQuery = useTopics();
+  const topicsQuery = useGetTopics();
   const createNoteMutation = useCreateNote();
   const topics = topicsQuery.data ?? [];
   const firstTopicId = topicsQuery.data?.[0]?.id;
@@ -82,9 +82,7 @@ export function useStudyNoteForm() {
     isSubmitting: createNoteMutation.isPending,
     isLoadingTopics: topicsQuery.isPending,
     isFormDisabled:
-      createNoteMutation.isPending ||
-      topicsQuery.isPending ||
-      !selectedTopicId,
+      createNoteMutation.isPending || topicsQuery.isPending || !selectedTopicId,
     setTopicId,
     setQuestion,
     setSaveToDeck,

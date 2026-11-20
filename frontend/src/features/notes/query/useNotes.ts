@@ -26,18 +26,18 @@ export const noteQueries = {
   }),
 };
 
-export function useTopics() {
+export function useGetTopics() {
   return useQuery(noteQueries.topics());
 }
 
-export function useNotes() {
+export function useGetNotes() {
   return useQuery({
     ...noteQueries.notes(),
     select: (notes: Note[]) => NoteEntity.fromRawList(notes),
   });
 }
 
-export function useNote(noteId: string) {
+export function useGetNote(noteId: string) {
   return useQuery({
     queryKey: noteKeys.detail(noteId),
     queryFn: () => getNote(noteId),

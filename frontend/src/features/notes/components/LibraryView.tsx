@@ -13,8 +13,8 @@ import {
 import Link from "next/link";
 import { Icon } from "@/src/components/Icon";
 import { NoteCard } from "@/src/features/notes/components/NoteCard";
-import { useNotes } from "../query/useNotes";
-import { useTopics } from "../query/useNotes";
+import { useGetNotes } from "../query/useNotes";
+import { useGetTopics } from "../query/useNotes";
 import { useLearningStats } from "@/src/features/dashboard/query/useDashboard";
 import { ViewSkeleton } from "@/src/components/feedback/ViewSkeleton";
 
@@ -24,8 +24,8 @@ import { ViewSkeleton } from "@/src/components/feedback/ViewSkeleton";
  * Hook-driven with zero required props.
  */
 export function LibraryView() {
-  const notesQuery = useNotes();
-  const topicsQuery = useTopics();
+  const notesQuery = useGetNotes();
+  const topicsQuery = useGetTopics();
   const statsQuery = useLearningStats();
   const notes = notesQuery.data ?? [];
   const topics = topicsQuery.data ?? [];

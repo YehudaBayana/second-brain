@@ -5,7 +5,7 @@ import type { Flashcard, ReviewGrade } from "../model/types";
 import type { LearningStats } from "@/src/features/dashboard/model/types";
 import { dashboardKeys, noteKeys, reviewKeys } from "@/src/services/keys";
 
-export function useDueCards() {
+export function useGetDueCards() {
   return useQuery({
     queryKey: reviewKeys.dueCards(),
     queryFn: () => reviewService.getDueCards(),
@@ -19,9 +19,8 @@ export function useGradeCard() {
     mutationFn: ({ cardId, grade }: { cardId: string; grade: ReviewGrade }) =>
       reviewService.gradeCard(cardId, grade),
     onSuccess: () => {
-      queryClient.setQueryData<Flashcard[]>(
-        reviewKeys.dueCards(),
-        (cards) => cards?.slice(1),
+      queryClient.setQueryData<Flashcard[]>(reviewKeys.dueCards(), (cards) =>
+        cards?.slice(1),
       );
       queryClient.setQueryData(
         dashboardKeys.stats(),

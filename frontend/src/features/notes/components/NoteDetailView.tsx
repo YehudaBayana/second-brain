@@ -16,19 +16,24 @@ import { CodeHighlight } from "@mantine/code-highlight";
 import Link from "next/link";
 import { ViewSkeleton } from "@/src/components/feedback/ViewSkeleton";
 import { NoteEntity } from "../model/NoteEntity";
-import { useNote } from "../query/useNotes";
+import { useGetNote } from "../query/useNotes";
 import { Icon } from "@/src/components/Icon";
 import { NoteChat } from "@/src/features/assistant/components/NoteChat";
 
 export function NoteDetailView({ noteId }: { noteId: string }) {
-  const query = useNote(noteId);
+  const query = useGetNote(noteId);
 
   if (query.isPending) {
     return <ViewSkeleton view="library" />;
   }
   if (query.isError) {
     return (
-      <Alert color="red" variant="light" title="Could not open this note" role="alert">
+      <Alert
+        color="red"
+        variant="light"
+        title="Could not open this note"
+        role="alert"
+      >
         <Stack gap="sm">
           <Text>{query.error.message}</Text>
           <Button
@@ -54,9 +59,13 @@ export function NoteDetailView({ noteId }: { noteId: string }) {
     <Stack gap="xl">
       <Group justify="space-between" align="flex-start">
         <Stack gap="xs">
-          <Badge variant="light" color="indigo">{entity.topicName}</Badge>
+          <Badge variant="light" color="indigo">
+            {entity.topicName}
+          </Badge>
           <Title order={1}>{entity.displayTitle}</Title>
-          <Text size="sm" c="dimmed">{entity.formattedDate}</Text>
+          <Text size="sm" c="dimmed">
+            {entity.formattedDate}
+          </Text>
         </Stack>
         <Button
           component={Link}
@@ -83,60 +92,60 @@ export function NoteDetailView({ noteId }: { noteId: string }) {
             <Text>{note.explanation}</Text>
           </Stack>
 
-        {keyTakeaways.length > 0 ? (
-          <Stack gap="sm">
-            <Title order={3}>Key takeaways</Title>
-            <List withPadding spacing="xs">
-              {keyTakeaways.map((item, index) => (
-                <List.Item key={`${index}-${item}`}>{item}</List.Item>
-              ))}
-            </List>
-          </Stack>
-        ) : null}
+          {keyTakeaways.length > 0 ? (
+            <Stack gap="sm">
+              <Title order={3}>Key takeaways</Title>
+              <List withPadding spacing="xs">
+                {keyTakeaways.map((item, index) => (
+                  <List.Item key={`${index}-${item}`}>{item}</List.Item>
+                ))}
+              </List>
+            </Stack>
+          ) : null}
 
-        {codeExamples.length > 0 ? (
-          <Stack gap="sm">
-            <Title order={3}>Examples</Title>
-            {codeExamples.map((example, index) => (
-              <CodeHighlight
-                code={example}
-                language="bash"
-                withLineNumbers
-                withBorder
-                key={`${index}-${example.slice(0, 24)}`}
-              />
-            ))}
-          </Stack>
-        ) : null}
-
-        {cards.length > 0 ? (
-          <Stack gap="sm">
-            <Title order={3}>Review cards</Title>
-            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-              {cards.map((card) => (
-                <Paper key={card.id} p="md" bg="gray.0">
-                  <Stack gap="sm">
-                    <Stack gap={4}>
-                      <Text size="xs" fw={700} tt="uppercase" c="dimmed">
-                        Question
-                      </Text>
-                      <Text>{card.frontQuestion}</Text>
-                    </Stack>
-                    <Stack gap={4}>
-                      <Text size="xs" fw={700} tt="uppercase" c="dimmed">
-                        Answer
-                      </Text>
-                      <Text>{card.backAnswer}</Text>
-                    </Stack>
-                    <Text size="xs" c="dimmed">
-                      Next review: {card.nextReviewDate}
-                    </Text>
-                  </Stack>
-                </Paper>
+          {codeExamples.length > 0 ? (
+            <Stack gap="sm">
+              <Title order={3}>Examples</Title>
+              {codeExamples.map((example, index) => (
+                <CodeHighlight
+                  code={example}
+                  language="bash"
+                  withLineNumbers
+                  withBorder
+                  key={`${index}-${example.slice(0, 24)}`}
+                />
               ))}
-            </SimpleGrid>
-          </Stack>
-        ) : null}
+            </Stack>
+          ) : null}
+
+          {cards.length > 0 ? (
+            <Stack gap="sm">
+              <Title order={3}>Review cards</Title>
+              <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                {cards.map((card) => (
+                  <Paper key={card.id} p="md" bg="gray.0">
+                    <Stack gap="sm">
+                      <Stack gap={4}>
+                        <Text size="xs" fw={700} tt="uppercase" c="dimmed">
+                          Question
+                        </Text>
+                        <Text>{card.frontQuestion}</Text>
+                      </Stack>
+                      <Stack gap={4}>
+                        <Text size="xs" fw={700} tt="uppercase" c="dimmed">
+                          Answer
+                        </Text>
+                        <Text>{card.backAnswer}</Text>
+                      </Stack>
+                      <Text size="xs" c="dimmed">
+                        Next review: {card.nextReviewDate}
+                      </Text>
+                    </Stack>
+                  </Paper>
+                ))}
+              </SimpleGrid>
+            </Stack>
+          ) : null}
         </Stack>
       </Paper>
 

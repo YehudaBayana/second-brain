@@ -1,10 +1,7 @@
 "use client";
 
 import { useGetCurrentUser } from "@/src/features/auth/query/useAuth";
-import {
-  useNotes,
-  useTopics,
-} from "@/src/features/notes/query/useNotes";
+import { useGetNotes, useGetTopics } from "@/src/features/notes/query/useNotes";
 import { useLearningStats } from "../query/useDashboard";
 
 const emptyStats = {
@@ -20,8 +17,8 @@ const emptyStats = {
  */
 export function useDashboard() {
   const userQuery = useGetCurrentUser();
-  const notesQuery = useNotes();
-  const topicsQuery = useTopics();
+  const notesQuery = useGetNotes();
+  const topicsQuery = useGetTopics();
   const statsQuery = useLearningStats();
 
   const user = userQuery.data?.user;
